@@ -10,6 +10,14 @@
 		76842FB81F62969200F1A0D3 /* Download.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 76842FAE1F62969200F1A0D3 /* Download.framework */; };
 		76842FBD1F62969200F1A0D3 /* DownloadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76842FBC1F62969200F1A0D3 /* DownloadTests.swift */; };
 		76842FBF1F62969200F1A0D3 /* Download.h in Headers */ = {isa = PBXBuildFile; fileRef = 76842FB11F62969200F1A0D3 /* Download.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		76842FCC1F62977B00F1A0D3 /* CHANGELOG.md in Sources */ = {isa = PBXBuildFile; fileRef = 76842FC81F62977B00F1A0D3 /* CHANGELOG.md */; };
+		76842FCD1F62977B00F1A0D3 /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 76842FC91F62977B00F1A0D3 /* LICENSE */; };
+		76842FCE1F62977B00F1A0D3 /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = 76842FCA1F62977B00F1A0D3 /* README.md */; };
+		76842FCF1F62977B00F1A0D3 /* UPGRADE_GUIDE.md in Sources */ = {isa = PBXBuildFile; fileRef = 76842FCB1F62977B00F1A0D3 /* UPGRADE_GUIDE.md */; };
+		76842FD61F62979A00F1A0D3 /* .env in Resources */ = {isa = PBXBuildFile; fileRef = 76842FD11F62979A00F1A0D3 /* .env */; };
+		76842FD71F62979A00F1A0D3 /* update_dependency_graph.rb in Resources */ = {isa = PBXBuildFile; fileRef = 76842FD31F62979A00F1A0D3 /* update_dependency_graph.rb */; };
+		76842FD81F62979A00F1A0D3 /* Appfile in Resources */ = {isa = PBXBuildFile; fileRef = 76842FD41F62979A00F1A0D3 /* Appfile */; };
+		76842FD91F62979A00F1A0D3 /* Fastfile in Resources */ = {isa = PBXBuildFile; fileRef = 76842FD51F62979A00F1A0D3 /* Fastfile */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -29,6 +37,14 @@
 		76842FB71F62969200F1A0D3 /* DownloadTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DownloadTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		76842FBC1F62969200F1A0D3 /* DownloadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadTests.swift; sourceTree = "<group>"; };
 		76842FBE1F62969200F1A0D3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		76842FC81F62977B00F1A0D3 /* CHANGELOG.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = CHANGELOG.md; sourceTree = SOURCE_ROOT; };
+		76842FC91F62977B00F1A0D3 /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = SOURCE_ROOT; };
+		76842FCA1F62977B00F1A0D3 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
+		76842FCB1F62977B00F1A0D3 /* UPGRADE_GUIDE.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = UPGRADE_GUIDE.md; sourceTree = SOURCE_ROOT; };
+		76842FD11F62979A00F1A0D3 /* .env */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .env; sourceTree = "<group>"; };
+		76842FD31F62979A00F1A0D3 /* update_dependency_graph.rb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.ruby; path = update_dependency_graph.rb; sourceTree = "<group>"; };
+		76842FD41F62979A00F1A0D3 /* Appfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Appfile; sourceTree = "<group>"; };
+		76842FD51F62979A00F1A0D3 /* Fastfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Fastfile; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,6 +87,11 @@
 		76842FB01F62969200F1A0D3 /* Download */ = {
 			isa = PBXGroup;
 			children = (
+				76842FC81F62977B00F1A0D3 /* CHANGELOG.md */,
+				76842FC91F62977B00F1A0D3 /* LICENSE */,
+				76842FCA1F62977B00F1A0D3 /* README.md */,
+				76842FCB1F62977B00F1A0D3 /* UPGRADE_GUIDE.md */,
+				76842FD01F62979A00F1A0D3 /* fastlane */,
 				76842FB11F62969200F1A0D3 /* Download.h */,
 				76842FB21F62969200F1A0D3 /* Info.plist */,
 			);
@@ -84,6 +105,25 @@
 				76842FBE1F62969200F1A0D3 /* Info.plist */,
 			);
 			path = DownloadTests;
+			sourceTree = "<group>";
+		};
+		76842FD01F62979A00F1A0D3 /* fastlane */ = {
+			isa = PBXGroup;
+			children = (
+				76842FD11F62979A00F1A0D3 /* .env */,
+				76842FD21F62979A00F1A0D3 /* actions */,
+				76842FD41F62979A00F1A0D3 /* Appfile */,
+				76842FD51F62979A00F1A0D3 /* Fastfile */,
+			);
+			path = fastlane;
+			sourceTree = SOURCE_ROOT;
+		};
+		76842FD21F62979A00F1A0D3 /* actions */ = {
+			isa = PBXGroup;
+			children = (
+				76842FD31F62979A00F1A0D3 /* update_dependency_graph.rb */,
+			);
+			path = actions;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -181,6 +221,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				76842FD91F62979A00F1A0D3 /* Fastfile in Resources */,
+				76842FD81F62979A00F1A0D3 /* Appfile in Resources */,
+				76842FCD1F62977B00F1A0D3 /* LICENSE in Resources */,
+				76842FD71F62979A00F1A0D3 /* update_dependency_graph.rb in Resources */,
+				76842FD61F62979A00F1A0D3 /* .env in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -198,6 +243,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				76842FCE1F62977B00F1A0D3 /* README.md in Sources */,
+				76842FCF1F62977B00F1A0D3 /* UPGRADE_GUIDE.md in Sources */,
+				76842FCC1F62977B00F1A0D3 /* CHANGELOG.md in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -402,6 +450,7 @@
 				76842FC41F62969200F1A0D3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		76842FC51F62969200F1A0D3 /* Build configuration list for PBXNativeTarget "DownloadTests" */ = {
 			isa = XCConfigurationList;
@@ -410,6 +459,7 @@
 				76842FC71F62969200F1A0D3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
