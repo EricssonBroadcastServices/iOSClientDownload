@@ -18,6 +18,7 @@
 		76842FD71F62979A00F1A0D3 /* update_dependency_graph.rb in Resources */ = {isa = PBXBuildFile; fileRef = 76842FD31F62979A00F1A0D3 /* update_dependency_graph.rb */; };
 		76842FD81F62979A00F1A0D3 /* Appfile in Resources */ = {isa = PBXBuildFile; fileRef = 76842FD41F62979A00F1A0D3 /* Appfile */; };
 		76842FD91F62979A00F1A0D3 /* Fastfile in Resources */ = {isa = PBXBuildFile; fileRef = 76842FD51F62979A00F1A0D3 /* Fastfile */; };
+		76842FDB1F63DC3D00F1A0D3 /* Downloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76842FDA1F63DC3D00F1A0D3 /* Downloader.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,6 +46,7 @@
 		76842FD31F62979A00F1A0D3 /* update_dependency_graph.rb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.ruby; path = update_dependency_graph.rb; sourceTree = "<group>"; };
 		76842FD41F62979A00F1A0D3 /* Appfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Appfile; sourceTree = "<group>"; };
 		76842FD51F62979A00F1A0D3 /* Fastfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Fastfile; sourceTree = "<group>"; };
+		76842FDA1F63DC3D00F1A0D3 /* Downloader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Downloader.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,6 +96,7 @@
 				76842FD01F62979A00F1A0D3 /* fastlane */,
 				76842FB11F62969200F1A0D3 /* Download.h */,
 				76842FB21F62969200F1A0D3 /* Info.plist */,
+				76842FDA1F63DC3D00F1A0D3 /* Downloader.swift */,
 			);
 			path = Download;
 			sourceTree = "<group>";
@@ -245,6 +248,7 @@
 			files = (
 				76842FCE1F62977B00F1A0D3 /* README.md in Sources */,
 				76842FCF1F62977B00F1A0D3 /* UPGRADE_GUIDE.md in Sources */,
+				76842FDB1F63DC3D00F1A0D3 /* Downloader.swift in Sources */,
 				76842FCC1F62977B00F1A0D3 /* CHANGELOG.md in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -410,6 +414,7 @@
 		76842FC61F62969200F1A0D3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				DEVELOPMENT_TEAM = JCUPRVKEC5;
 				INFOPLIST_FILE = DownloadTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
@@ -422,6 +427,7 @@
 		76842FC71F62969200F1A0D3 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				DEVELOPMENT_TEAM = JCUPRVKEC5;
 				INFOPLIST_FILE = DownloadTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
