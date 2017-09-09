@@ -18,7 +18,9 @@ import AVFoundation
 //}
 
 public enum DownloadError: Error {
-    case temp
+    case generalError(error: Error)
+    
+    case noDestinationURL
 }
 
 public final class DownloadTask {
@@ -30,10 +32,19 @@ public final class DownloadTask {
         public let total: Int64
     }
     
+    internal struct Configuration {
+        let url: URL
+        let name: String?
+        let artwork: Data?
+    }
+    
+    fileprivate let configuration: Configuration
     fileprivate var task: AVAssetDownloadTask?
     fileprivate var session: AVAssetDownloadURLSession?
     
-    public init() { }
+    internal init(configuration: Configuration) {
+        self.configuration = configuration
+    }
     
     // Controls
     public func resume() {
@@ -142,6 +153,48 @@ extension DownloadTask: DownloadEventPublisher {
     }
 }
 
+internal class DownloadDelegate: NSObject {
+    internal unowned let downloadTask: DownloadTask
+    
+    internal init(task: DownloadTask) {
+        downloadTask = task
+    }
+}
+
+extension DownloadDelegate: URLSessionTaskDelegate {
+    
+    // Required for completion event if iOS < 10
+    public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        guard error == nil else {
+            downloadTask.onError(downloadTask, .generalError(error: error!))
+            return
+        }
+        
+        if #available(iOS 9, *) {
+            guard let destination = downloadTask.task?.destinationURL else {
+                downloadTask.onError(downloadTask, .noDestinationURL)
+                return
+            }
+            downloadTask.onCompleted(downloadTask, destination)
+        }
+        
+    }
+}
+extension DownloadDelegate: AVAssetDownloadDelegate {
+    // @available(iOS 10.0, *)
+    public func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didFinishDownloadingTo location: URL) {
+        downloadTask.onCompleted(downloadTask, location)
+    }
+    
+    public func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didLoad timeRange: CMTimeRange, totalTimeRangesLoaded loadedTimeRanges: [NSValue], timeRangeExpectedToLoad: CMTimeRange) {
+        
+    }
+    
+    public func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didResolve resolvedMediaSelection: AVMediaSelection) {
+        
+    }
+}
+
 public protocol DownloadEventPublisher {
     associatedtype DownloadEventProgress
     associatedtype DownloadEventError
@@ -163,8 +216,13 @@ public protocol DownloadEventPublisher {
     func onPlaybackReady(callback: @escaping (Self, URL) -> Void) -> Self
 }
 
-//public struct Downloader {
-//    public static func download(media: String, from url: URL) -> DownloadTask { }
-//    
+public struct Downloader {
+    public static func download(mediaLocator: URL, named name: String = UUID().uuidString, artwork artworkData: Data? = nil) -> DownloadTask {
+        let configuration = DownloadTask.Configuration(url: mediaLocator,
+                                                       name: name,
+                                                       artwork: artworkData)
+        return DownloadTask(configuration: configuration)
+    }
+    
 //    public static func offline(assetId: String) -> OfflineMediaAsset? { }
-//}
+}
