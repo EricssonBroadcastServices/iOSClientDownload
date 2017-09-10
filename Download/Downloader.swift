@@ -21,6 +21,8 @@ public enum DownloadError: Error {
     case generalError(error: Error)
     
     case noDestinationURL
+    case completedWithError(error: Error)
+    case failedToDeleteMedia(error: Error)
 }
 
 public final class DownloadTask {
@@ -38,6 +40,17 @@ public final class DownloadTask {
         let artwork: Data?
     }
     
+    internal struct Persistence {
+        /// location.bookmarkData()
+        /// Bookmark data should be used when persisting this url to disk
+        let location: URL
+        
+    }
+    
+    ///
+    fileprivate var mediaSelection: AVMediaSelection?
+    
+    fileprivate var persistence: Persistence?
     fileprivate let configuration: Configuration
     fileprivate var task: AVAssetDownloadTask?
     fileprivate var session: AVAssetDownloadURLSession?
@@ -69,12 +82,12 @@ public final class DownloadTask {
         return self
     }
     
-    fileprivate var mediaSelection: AVMediaSelection?
-    public func use(mediaSelection: AVMediaSelection) -> Self {
-        // The media selection can be set on a AVAssetDownloadTask object using the AVAssetDownloadTaskMediaSelectionKey.
-        self.mediaSelection = mediaSelection
-        return self
-    }
+//    fileprivate var mediaSelection: AVMediaSelection?
+//    public func use(mediaSelection: AVMediaSelection) -> Self {
+//        // The media selection can be set on a AVAssetDownloadTask object using the AVAssetDownloadTaskMediaSelectionKey.
+//        self.mediaSelection = mediaSelection
+//        return self
+//    }
     
     fileprivate var cellularAccess: Bool = false
     public func allow(cellularAccess: Bool) -> Self {
@@ -163,35 +176,83 @@ internal class DownloadDelegate: NSObject {
 
 extension DownloadDelegate: URLSessionTaskDelegate {
     
-    // Required for completion event if iOS < 10
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        guard error == nil else {
-            downloadTask.onError(downloadTask, .generalError(error: error!))
-            return
-        }
+//        guard error == nil else {
+//            downloadTask.onError(downloadTask, .generalError(error: error!))
+//            return
+//        }
         
-        if #available(iOS 9, *) {
-            guard let destination = downloadTask.task?.destinationURL else {
-                downloadTask.onError(downloadTask, .noDestinationURL)
-                return
+//        let canceled = false
+//        if (canceled) {
+//            downloadTask.onCanceled(downloadTask, location)
+//        }
+//        else {
+//            downloadTask.onCompleted(downloadTask, location)
+//        }
+
+        if let error = error {
+            // Error
+            if let nsError = error as? NSError {
+                switch (nsError.domain, nsError.code) {
+                case (NSURLErrorDomain, NSURLErrorCancelled):
+                    // This task was canceled by user. URL was saved from `urlSession(_:assetDownloadTask:didFinishDownloadingTo:)`. Perform cleanup
+                    defer {
+                        downloadTask.onCanceled(downloadTask)
+                    }
+                    guard let location = downloadTask.persistence?.location else {
+                        // TODO: Should we throw an error here when the local assets could not be found?
+                        return
+                    }
+                    
+                    do {
+                        try FileManager.default.removeItem(at: location)
+                        
+                        downloadTask.persistence = nil
+                    }
+                    catch {
+                        downloadTask.onError(downloadTask, .failedToDeleteMedia(error: error))
+                    }
+                default:
+                    downloadTask.onError(downloadTask, .completedWithError(error: error))
+                }
             }
-            downloadTask.onCompleted(downloadTask, destination)
+            else {
+                downloadTask.onError(downloadTask, .completedWithError(error: error))
+            }
+        }
+        else {
+            // Success
+            
+            // 1. Ask, by callback, if and which additional AVMediaSelectionOption's should be included
+            
+            // 2. if done, Trigger onCompleted
+            
+            //            downloadTask.onCompleted(downloadTask, location)
         }
         
     }
 }
+
 extension DownloadDelegate: AVAssetDownloadDelegate {
-    // @available(iOS 10.0, *)
+    /// NOTE: Will also be called when a partially downloaded asset is cancelled by the user
+    /// Also called onError?
+    ///
+    /// This delegate callback should only be used to save the location URL somewhere in your application. Any additional work should be done in `URLSessionTaskDelegate.urlSession(_:task:didCompleteWithError:)`.
     public func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didFinishDownloadingTo location: URL) {
-        downloadTask.onCompleted(downloadTask, location)
+        
+        // This is the location to save
+        // let locationToSave = location.relativePath
+        downloadTask.persistence = DownloadTask.Persistence(location: location)
     }
     
+    @available(iOS 9.0, *)
     public func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didLoad timeRange: CMTimeRange, totalTimeRangesLoaded loadedTimeRanges: [NSValue], timeRangeExpectedToLoad: CMTimeRange) {
         
     }
     
+    @available(iOS 9.0, *)
     public func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didResolve resolvedMediaSelection: AVMediaSelection) {
-        
+        downloadTask.mediaSelection = resolvedMediaSelection
     }
 }
 
