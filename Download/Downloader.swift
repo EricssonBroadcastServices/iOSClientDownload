@@ -20,7 +20,7 @@ import AVFoundation
 public enum DownloadError: Error {
     case generalError(error: Error)
     
-    case noDestinationURL
+    case storageUrlNotFound
     case completedWithError(error: Error)
     case failedToDeleteMedia(error: Error)
 }
@@ -177,37 +177,23 @@ internal class DownloadDelegate: NSObject {
 extension DownloadDelegate: URLSessionTaskDelegate {
     
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-//        guard error == nil else {
-//            downloadTask.onError(downloadTask, .generalError(error: error!))
-//            return
-//        }
-        
-//        let canceled = false
-//        if (canceled) {
-//            downloadTask.onCanceled(downloadTask, location)
-//        }
-//        else {
-//            downloadTask.onCompleted(downloadTask, location)
-//        }
-
         if let error = error {
             // Error
             if let nsError = error as? NSError {
                 switch (nsError.domain, nsError.code) {
                 case (NSURLErrorDomain, NSURLErrorCancelled):
                     // This task was canceled by user. URL was saved from `urlSession(_:assetDownloadTask:didFinishDownloadingTo:)`. Perform cleanup
-                    defer {
-                        downloadTask.onCanceled(downloadTask)
-                    }
+                    
                     guard let location = downloadTask.persistence?.location else {
                         // TODO: Should we throw an error here when the local assets could not be found?
+                        downloadTask.onError(downloadTask, .storageUrlNotFound)
                         return
                     }
                     
                     do {
                         try FileManager.default.removeItem(at: location)
-                        
                         downloadTask.persistence = nil
+                        downloadTask.onCanceled(downloadTask)
                     }
                     catch {
                         downloadTask.onError(downloadTask, .failedToDeleteMedia(error: error))
