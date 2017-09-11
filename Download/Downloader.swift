@@ -38,20 +38,24 @@ public final class DownloadTask {
         let url: URL
         let name: String?
         let artwork: Data?
-    }
-    
-    internal struct Persistence {
+        
         /// location.bookmarkData()
         /// Bookmark data should be used when persisting this url to disk
-        let location: URL
-        
+        ///
+        /// - important: destination URL will be handled diffrently on iOS 9 vs iOS 10. On the later version, storage url for local media is handled and assigned by the system. In iOS 9 this path is supplied by the user.
+        var destination: URL?
     }
+    
+//    internal struct Persistence {
+//        let location: URL
+//        
+//    }
     
     ///
     fileprivate var mediaSelection: AVMediaSelection?
     
-    fileprivate var persistence: Persistence?
-    fileprivate let configuration: Configuration
+//    fileprivate var persistence: Persistence?
+    fileprivate var configuration: Configuration
     fileprivate var task: AVAssetDownloadTask?
     fileprivate var session: AVAssetDownloadURLSession?
     
@@ -175,7 +179,6 @@ internal class DownloadDelegate: NSObject {
 }
 
 extension DownloadDelegate: URLSessionTaskDelegate {
-    
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         if let error = error {
             // Error
@@ -183,8 +186,7 @@ extension DownloadDelegate: URLSessionTaskDelegate {
                 switch (nsError.domain, nsError.code) {
                 case (NSURLErrorDomain, NSURLErrorCancelled):
                     // This task was canceled by user. URL was saved from `urlSession(_:assetDownloadTask:didFinishDownloadingTo:)`. Perform cleanup
-                    
-                    guard let location = downloadTask.persistence?.location else {
+                    guard let location = downloadTask.configuration.destination else {
                         // TODO: Should we throw an error here when the local assets could not be found?
                         downloadTask.onError(downloadTask, .storageUrlNotFound)
                         return
@@ -192,7 +194,7 @@ extension DownloadDelegate: URLSessionTaskDelegate {
                     
                     do {
                         try FileManager.default.removeItem(at: location)
-                        downloadTask.persistence = nil
+                        downloadTask.configuration.destination = nil
                         downloadTask.onCanceled(downloadTask)
                     }
                     catch {
@@ -211,6 +213,7 @@ extension DownloadDelegate: URLSessionTaskDelegate {
             
             // 1. Ask, by callback, if and which additional AVMediaSelectionOption's should be included
             
+            
             // 2. if done, Trigger onCompleted
             
             //            downloadTask.onCompleted(downloadTask, location)
@@ -224,11 +227,12 @@ extension DownloadDelegate: AVAssetDownloadDelegate {
     /// Also called onError?
     ///
     /// This delegate callback should only be used to save the location URL somewhere in your application. Any additional work should be done in `URLSessionTaskDelegate.urlSession(_:task:didCompleteWithError:)`.
+    @available(iOS 10.0, *)
     public func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didFinishDownloadingTo location: URL) {
         
         // This is the location to save
         // let locationToSave = location.relativePath
-        downloadTask.persistence = DownloadTask.Persistence(location: location)
+        downloadTask.configuration.destination = location
     }
     
     @available(iOS 9.0, *)
@@ -263,11 +267,35 @@ public protocol DownloadEventPublisher {
     func onPlaybackReady(callback: @escaping (Self, URL) -> Void) -> Self
 }
 
+public struct AvailableMediaTracks {
+    internal let asset: AVURLAsset
+    
+//    @available(iOS 10.0, *)
+//    internal let cache: AVAssetCache
+    
+    var subtitles: [AVMediaSelection] {
+        let mediaGroup = asset.mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicLegible)
+        
+        return []
+    }
+}
+
 public struct Downloader {
+    @available(iOS 10.0, *)
     public static func download(mediaLocator: URL, named name: String = UUID().uuidString, artwork artworkData: Data? = nil) -> DownloadTask {
         let configuration = DownloadTask.Configuration(url: mediaLocator,
                                                        name: name,
-                                                       artwork: artworkData)
+                                                       artwork: artworkData,
+                                                       destination: nil)
+        return DownloadTask(configuration: configuration)
+    }
+    
+    @available(iOS, introduced: 9.0, deprecated: 10.0)
+    public static func download(mediaLocator: URL, to destination: URL) -> DownloadTask {
+        let configuration = DownloadTask.Configuration(url: mediaLocator,
+                                                       name: nil,
+                                                       artwork: nil,
+                                                       destination: destination)
         return DownloadTask(configuration: configuration)
     }
     
