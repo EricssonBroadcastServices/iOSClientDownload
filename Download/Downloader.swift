@@ -48,7 +48,7 @@ public final class DownloadTask {
     }
     
     
-    ///
+    ///  During the initial asset download, the user’s default media selections—their primary audio and video tracks—are downloaded. If additional media selections such as subtitles, closed captions, or alternative audio tracks are found, the session delegate’s URLSession:assetDownloadTask:didResolveMediaSelection: method is called, indicating that additional media selections exist on the server. To download additional media selections, save a reference to this resolved AVMediaSelection object so you can create subsequent download tasks to be executed serially.
     fileprivate var resolvedMediaSelection: AVMediaSelection?
     
     fileprivate var urlAsset: AVURLAsset
@@ -160,12 +160,25 @@ public final class DownloadTask {
     fileprivate var onError: (DownloadTask, DownloadError) -> Void = { _ in }
     fileprivate var onPlaybackReady: (DownloadTask, URL) -> Void = { _ in }
     fileprivate var onAdditionalMediaWanted: ((DownloadTask, AdditionalMedia) -> MediaOption?) = { _ in return nil }
+}
+
+extension DownloadTask {
+    /// Returns currently downloaded subtitles
+    @available(iOS 10.0, *)
+    public var localSubtitles: [MediaOption] {
+        return urlAsset.localSubtitles
+    }
     
     /// Returns currently downloaded subtitles
     @available(iOS 10.0, *)
-    public var availableSubtitles: [MediaOption] {
-        let t =  urlAsset.assetCache
-        return []
+    public var localAudio: [MediaOption] {
+        return urlAsset.localAudio
+    }
+    
+    /// Returns currently downloaded subtitles
+    @available(iOS 10.0, *)
+    public var localVideo: [MediaOption] {
+        return urlAsset.localVideo
     }
 }
 
@@ -243,7 +256,7 @@ extension DownloadDelegate: URLSessionTaskDelegate {
             if let nsError = error as? NSError {
                 switch (nsError.domain, nsError.code) {
                 case (NSURLErrorDomain, NSURLErrorCancelled):
-                    // This task was canceled by user. URL was saved from 
+                    // This task was canceled by user. URL was saved from
                     guard let location = downloadTask.configuration.destination else {
                         downloadTask.onError(downloadTask, .storageUrlNotFound)
                         return
@@ -350,22 +363,65 @@ public protocol DownloadEventPublisher {
     func onAdditionalMediaWanted(callback: @escaping (Self, AdditionalMedia) -> MediaOption?) -> Self
 }
 
-public struct MediaOption {
+public struct MediaOption: Equatable {
     internal let group: AVMediaSelectionGroup
     public let option: AVMediaSelectionOption
+    
+    public static func == (lhs: MediaOption, rhs: MediaOption) -> Bool {
+        return lhs.group == rhs.group && lhs.option == rhs.option
+    }
 }
 
 extension AVURLAsset {
-    var availableSubtitles: AVMediaSelectionGroup? {
+    // MARK: Subtitles
+    private var subtitleGroup: AVMediaSelectionGroup? {
         return mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicLegible)
     }
     
-    var availableAudioTracks: AVMediaSelectionGroup? {
+    var availableSubtitles: [MediaOption] {
+        guard let group = subtitleGroup else { return [] }
+        return group.options.map{ MediaOption(group: group, option: $0) }
+    }
+    
+    /// TODO: How do we find out the *locally* stored media in iOS 9.0?
+    @available(iOS 10.0, *)
+    var localSubtitles: [MediaOption] {
+        guard let group = subtitleGroup else { return [] }
+        return assetCache?.mediaSelectionOptions(in: group).map{ MediaOption(group: group, option: $0) } ?? []
+    }
+    
+    // MARK: Audio
+    private var audioGroup: AVMediaSelectionGroup? {
         return mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicAudible)
     }
     
-    var availableVideoTracks: AVMediaSelectionGroup? {
+    var availableAudio: [MediaOption] {
+        guard let group = audioGroup else { return [] }
+        return group.options.map{ MediaOption(group: group, option: $0) }
+    }
+    
+    /// TODO: How do we find out the *locally* stored media in iOS 9.0?
+    @available(iOS 10.0, *)
+    var localAudio: [MediaOption] {
+        guard let group = audioGroup else { return [] }
+        return assetCache?.mediaSelectionOptions(in: group).map{ MediaOption(group: group, option: $0) } ?? []
+    }
+    
+    // MARK: Video
+    private var videoGroup: AVMediaSelectionGroup? {
         return mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicVisual)
+    }
+    
+    var availableVideo: [MediaOption] {
+        guard let group = videoGroup else { return [] }
+        return group.options.map{ MediaOption(group: group, option: $0) }
+    }
+    
+    /// TODO: How do we find out the *locally* stored media in iOS 9.0?
+    @available(iOS 10.0, *)
+    var localVideo: [MediaOption] {
+        guard let group = videoGroup else { return [] }
+        return assetCache?.mediaSelectionOptions(in: group).map{ MediaOption(group: group, option: $0) } ?? []
     }
 }
 
@@ -373,38 +429,32 @@ public struct AdditionalMedia {
     internal let asset: AVURLAsset
     
     public var subtitles: [MediaOption] {
-        guard let group = asset.mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicLegible) else { return [] }
-        
-        let mediaOptions = avaliableOptions(for: group)
-        
-        return mediaOptions.map{ MediaOption(group: group, option: $0) }
+        if #available(iOS 10.0, *) {
+            let local = asset.localSubtitles
+            return asset.availableSubtitles.filter{ !local.contains($0) }
+        }
+        else {
+            return asset.availableSubtitles
+        }
     }
     
     public var audio: [MediaOption] {
-        guard let group = asset.mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicAudible) else { return [] }
-        
-        let mediaOptions = avaliableOptions(for: group)
-        
-        return mediaOptions.map{ MediaOption(group: group, option: $0) }
+        if #available(iOS 10.0, *) {
+            let local = asset.localAudio
+            return asset.availableAudio.filter{ !local.contains($0) }
+        }
+        else {
+            return asset.availableAudio
+        }
     }
     
     public var video: [MediaOption] {
-        guard let group = asset.mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicVisual) else { return [] }
-        
-        let mediaOptions = avaliableOptions(for: group)
-        
-        return mediaOptions.map{ MediaOption(group: group, option: $0) }
-    }
-    
-    private func avaliableOptions(for group: AVMediaSelectionGroup) -> [AVMediaSelectionOption] {
-        let options = group.options
-        if #available(iOS 10.0, *), let cache = asset.assetCache {
-            let savedOptions = cache.mediaSelectionOptions(in: group)
-            
-            return options.filter{ !savedOptions.contains($0) }
+        if #available(iOS 10.0, *) {
+            let local = asset.localVideo
+            return asset.availableVideo.filter{ !local.contains($0) }
         }
         else {
-            return options
+            return asset.availableVideo
         }
     }
 }
