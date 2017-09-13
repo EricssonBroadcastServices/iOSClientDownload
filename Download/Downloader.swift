@@ -160,6 +160,13 @@ public final class DownloadTask {
     fileprivate var onError: (DownloadTask, DownloadError) -> Void = { _ in }
     fileprivate var onPlaybackReady: (DownloadTask, URL) -> Void = { _ in }
     fileprivate var onAdditionalMediaWanted: ((DownloadTask, AdditionalMedia) -> MediaOption?) = { _ in return nil }
+    
+    /// Returns currently downloaded subtitles
+    @available(iOS 10.0, *)
+    public var availableSubtitles: [MediaOption] {
+        let t =  urlAsset.assetCache
+        return []
+    }
 }
 
 extension DownloadTask: DownloadEventPublisher {
@@ -236,7 +243,7 @@ extension DownloadDelegate: URLSessionTaskDelegate {
             if let nsError = error as? NSError {
                 switch (nsError.domain, nsError.code) {
                 case (NSURLErrorDomain, NSURLErrorCancelled):
-                    // This task was canceled by user. URL was saved from `urlSession(_:assetDownloadTask:didFinishDownloadingTo:)`. Perform cleanup
+                    // This task was canceled by user. URL was saved from 
                     guard let location = downloadTask.configuration.destination else {
                         downloadTask.onError(downloadTask, .storageUrlNotFound)
                         return
@@ -260,8 +267,15 @@ extension DownloadDelegate: URLSessionTaskDelegate {
         }
         else {
             // Success
-            // 1. Ask, by callback, if and which additional AVMediaSelectionOption's should be included
+            guard let resolvedMedia = downloadTask.resolvedMediaSelection else {
+                // 1. No more media available. Trigger onCompleted
+                finalizeDownload()
+                return
+            }
+            
+            // 2. Ask, by callback, if and which additional AVMediaSelectionOption's should be included
             if let newSelection = downloadTask.onAdditionalMediaWanted(downloadTask, AdditionalMedia(asset: downloadTask.urlAsset)) {
+                // 2.1 User indicated additional media is requested
                 let currentMediaOption = downloadTask.resolvedMediaSelection?.mutableCopy() as! AVMutableMediaSelection
                 
                 currentMediaOption.select(newSelection.option, in: newSelection.group)
@@ -271,18 +285,21 @@ extension DownloadDelegate: URLSessionTaskDelegate {
                 downloadTask.startTask(with: options)
             }
             else {
-                // 2. Done, Trigger onCompleted
-                guard let location = downloadTask.configuration.destination else {
-                    // 3. Error when no storage url is found
-                    downloadTask.onError(downloadTask, .storageUrlNotFound)
-                    return
-                }
-                
-                downloadTask.onCompleted(downloadTask, location)
-                return
+                // 2.2 No additional media was requested
+                finalizeDownload()
             }
         }
         
+    }
+    
+    private func finalizeDownload() {
+        guard let location = downloadTask.configuration.destination else {
+            // 3. Error when no storage url is found
+            downloadTask.onError(downloadTask, .storageUrlNotFound)
+            return
+        }
+        
+        downloadTask.onCompleted(downloadTask, location)
     }
 }
 
