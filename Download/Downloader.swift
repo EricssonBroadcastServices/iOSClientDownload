@@ -23,6 +23,7 @@ public enum DownloadError: Error {
     case storageUrlNotFound
     case completedWithError(error: Error)
     case failedToDeleteMedia(error: Error)
+    case canceledTaskFailedToDeleteLocalMedia
     case downloadSessionInvalidated
 }
 
@@ -77,24 +78,37 @@ public final class DownloadTask {
     // Controls
     public func resume() {
         // AVAssetDownloadTask provides the ability to resume previously stopped downloads under certain circumstances. To do so, simply instantiate a new AVAssetDownloadTask with an AVURLAsset instantiated with a file NSURL pointing to the partially downloaded bundle with the desired download options, and the download will continue restoring any previously downloaded data. FPS keys remain encrypted in persisted form during this process.
-        
+        if task == nil {
+            initialDownload()
+        }
+        else {
+            task?.resume()
+            onResumed(self)
+        }
     }
     
     fileprivate func initialDownload() {
         // Fetch the targeted bitrate
         let options = requiredBitrate != nil ? [AVAssetDownloadTaskMinimumRequiredMediaBitrateKey: requiredBitrate!] : nil
         
-        startTask(with: options)
+        startTask(with: options) { error in
+            guard error == nil else {
+                onError(self, error!)
+                return
+            }
+            onStarted(self)
+        }
     }
     
-    fileprivate func startTask(with options: [String: Any]?) {
+    /// NOTE: Can/will replacing the previous task cause problems? Investigate
+    fileprivate func startTask(with options: [String: Any]?, callback: (DownloadError?) -> Void) {
         if #available(iOS 10.0, *) {
             guard let task = session.makeAssetDownloadTask(asset: urlAsset,
                                                            assetTitle: configuration.name,
                                                            assetArtworkData: configuration.artwork,
                                                            options: options) else {
                 // This method may return nil if the AVAssetDownloadURLSession has been invalidated.
-                onError(self, .downloadSessionInvalidated)
+                callback(.downloadSessionInvalidated)
                 return
             }
             self.task = task
@@ -112,7 +126,7 @@ public final class DownloadTask {
                                                            destinationURL: destination,
                                                            options: options) else {
                 // This method may return nil if the URLSession has been invalidated
-                onError(self, .downloadSessionInvalidated)
+                callback(.downloadSessionInvalidated)
                 return
             }
             
@@ -127,19 +141,29 @@ public final class DownloadTask {
     public func suspend() {
         // If a download has been started, it can be stopped. AVAssetDownloadTask inherits from NSURLSessionTask, and downloads can be suspended or cancelled using the corresponding methods inherited from NSURLSessionTask. In the case where a download is stopped and there is no intention of resuming it, apps are responsible for deleting the portion of the asset already downloaded to a user’s device. The NSURLSessionTask documentation on developer.apple.com contains more details about this process.
         
+        guard let task = self.task else { return }
+        task.suspend()
+        onSuspended(self)
     }
     
     public func cancel() {
         // Downloaded HLS assets can be deleted using [NSFileManager removeItemAtURL:] with the URL for the downloaded version of the asset. In addition, if a user deletes the app that downloaded the HLS assets, they will also delete all content that the app stored to disk.
+        
+        guard let task = self.task else { return }
+        task.cancel()
+        
+        // NOTE: `onCanceled` called once `didCompleteWithError` delegate methods is triggered
     }
     
     // Configuration
     fileprivate var requiredBitrate: Int64?
+    @discardableResult
     public func use(bitrate: Int64?) -> Self {
         requiredBitrate = bitrate
         return self
     }
     
+    @discardableResult
     public func allow(cellularAccess: Bool) -> Self {
         sessionConfiguration.allowsCellularAccess = cellularAccess
         return self
@@ -159,7 +183,8 @@ public final class DownloadTask {
     fileprivate var onProgress: (DownloadTask, Progress) -> Void = { _ in }
     fileprivate var onError: (DownloadTask, DownloadError) -> Void = { _ in }
     fileprivate var onPlaybackReady: (DownloadTask, URL) -> Void = { _ in }
-    fileprivate var onAdditionalMediaWanted: ((DownloadTask, AdditionalMedia) -> MediaOption?) = { _ in return nil }
+    fileprivate var onShouldDownloadMediaOption: ((DownloadTask, AdditionalMedia) -> MediaOption?) = { _ in return nil }
+    fileprivate var onDownloadingMediaOption: (DownloadTask, MediaOption) -> Void = { _ in }
 }
 
 extension DownloadTask {
@@ -235,8 +260,14 @@ extension DownloadTask: DownloadEventPublisher {
     }
     
     @discardableResult
-    public func onAdditionalMediaWanted(callback: @escaping (DownloadTask, AdditionalMedia) -> MediaOption?) -> DownloadTask {
-        onAdditionalMediaWanted = callback
+    public func onShouldDownloadMediaOption(callback: @escaping (DownloadTask, AdditionalMedia) -> MediaOption?) -> DownloadTask {
+        onShouldDownloadMediaOption = callback
+        return self
+    }
+    
+    @discardableResult
+    public func onDownloadingMediaOption(callback: @escaping (DownloadTask, MediaOption) -> Void) -> DownloadTask {
+        onDownloadingMediaOption = callback
         return self
     }
 }
@@ -258,7 +289,7 @@ extension DownloadDelegate: URLSessionTaskDelegate {
                 case (NSURLErrorDomain, NSURLErrorCancelled):
                     // This task was canceled by user. URL was saved from
                     guard let location = downloadTask.configuration.destination else {
-                        downloadTask.onError(downloadTask, .storageUrlNotFound)
+                        downloadTask.onError(downloadTask, .canceledTaskFailedToDeleteLocalMedia)
                         return
                     }
                     
@@ -287,15 +318,21 @@ extension DownloadDelegate: URLSessionTaskDelegate {
             }
             
             // 2. Ask, by callback, if and which additional AVMediaSelectionOption's should be included
-            if let newSelection = downloadTask.onAdditionalMediaWanted(downloadTask, AdditionalMedia(asset: downloadTask.urlAsset)) {
+            if let newSelection = downloadTask.onShouldDownloadMediaOption(downloadTask, AdditionalMedia(asset: downloadTask.urlAsset)) {
                 // 2.1 User indicated additional media is requested
-                let currentMediaOption = downloadTask.resolvedMediaSelection?.mutableCopy() as! AVMutableMediaSelection
+                let currentMediaOption = resolvedMedia.mutableCopy() as! AVMutableMediaSelection
                 
                 currentMediaOption.select(newSelection.option, in: newSelection.group)
                 
                 let options = [AVAssetDownloadTaskMediaSelectionKey: currentMediaOption]
                 
-                downloadTask.startTask(with: options)
+                downloadTask.startTask(with: options) { [unowned self] error in
+                    guard error == nil else {
+                        self.downloadTask.onError(self.downloadTask, error!)
+                        return
+                    }
+                    self.downloadTask.onDownloadingMediaOption(self.downloadTask, newSelection)
+                }
             }
             else {
                 // 2.2 No additional media was requested
