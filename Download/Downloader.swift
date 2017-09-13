@@ -27,6 +27,10 @@ public enum DownloadError: Error {
     case downloadSessionInvalidated
 }
 
+public protocol OfflineFairplayRequester: AVAssetResourceLoaderDelegate {
+    
+}
+
 public final class DownloadTask {
     public struct Progress {
         /// Size in bytes
@@ -54,14 +58,18 @@ public final class DownloadTask {
     
     fileprivate var urlAsset: AVURLAsset
     fileprivate var configuration: Configuration
+    fileprivate var fairplayRequester: OfflineFairplayRequester?
+    
     fileprivate let sessionConfiguration: URLSessionConfiguration
     fileprivate var task: AVAssetDownloadTask?
+    
     fileprivate lazy var session: AVAssetDownloadURLSession = { [unowned self] in
         // Create the AVAssetDownloadURLSession using the configuration.
         return AVAssetDownloadURLSession(configuration: self.sessionConfiguration,
                                          assetDownloadDelegate: self.delegate,
                                          delegateQueue: OperationQueue.main)
     }()
+    
     fileprivate lazy var delegate: DownloadDelegate = { [unowned self] in
         return DownloadDelegate(task: self)
     }()
@@ -70,9 +78,16 @@ public final class DownloadTask {
         self.configuration = configuration
         
         // Create the configuration for the AVAssetDownloadURLSession.
-        sessionConfiguration = URLSessionConfiguration.background(withIdentifier: "EMP-Identifier")
+        sessionConfiguration = URLSessionConfiguration.background(withIdentifier: configuration.name + "-assetDownloadURLSession") // TODO: Should the configuration be per downloadTask or per `Download` module. IE do we use one per download or one for the entire module?
         
         urlAsset = AVURLAsset(url: configuration.url)
+    }
+    
+    // MARK: FairPlay
+    public func fairplay(requester: OfflineFairplayRequester) -> DownloadTask {
+        fairplayRequester = requester
+        urlAsset.resourceLoader.setDelegate(requester, queue: DispatchQueue(label: configuration.name + "-offlineFairplayLoader"))
+        return self
     }
     
     // Controls
