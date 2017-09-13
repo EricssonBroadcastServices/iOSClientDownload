@@ -23,6 +23,7 @@ public enum DownloadError: Error {
     case storageUrlNotFound
     case completedWithError(error: Error)
     case failedToDeleteMedia(error: Error)
+    case downloadSessionInvalidated
 }
 
 public final class DownloadTask {
@@ -36,7 +37,7 @@ public final class DownloadTask {
     
     internal struct Configuration {
         let url: URL
-        let name: String?
+        let name: String
         let artwork: Data?
         
         /// location.bookmarkData()
@@ -46,18 +47,14 @@ public final class DownloadTask {
         var destination: URL?
     }
     
-//    internal struct Persistence {
-//        let location: URL
-//        
-//    }
     
     ///
     fileprivate var mediaSelection: AVMediaSelection?
     
-//    fileprivate var persistence: Persistence?
     fileprivate var configuration: Configuration
     fileprivate var task: AVAssetDownloadTask?
     fileprivate var session: AVAssetDownloadURLSession?
+    fileprivate var delegate: DownloadDelegate?
     
     internal init(configuration: Configuration) {
         self.configuration = configuration
@@ -67,6 +64,68 @@ public final class DownloadTask {
     public func resume() {
         // AVAssetDownloadTask provides the ability to resume previously stopped downloads under certain circumstances. To do so, simply instantiate a new AVAssetDownloadTask with an AVURLAsset instantiated with a file NSURL pointing to the partially downloaded bundle with the desired download options, and the download will continue restoring any previously downloaded data. FPS keys remain encrypted in persisted form during this process.
         
+    }
+    
+    fileprivate func startDownload() {
+        // Create the configuration for the AVAssetDownloadURLSession.
+        let backgroundConfiguration = URLSessionConfiguration.background(withIdentifier: "AAPL-Identifier")
+        backgroundConfiguration.allowsCellularAccess = self.cellularAccess
+        
+        delegate = DownloadDelegate(task: self)
+        
+        // Create the AVAssetDownloadURLSession using the configuration.
+        session = AVAssetDownloadURLSession(configuration: backgroundConfiguration,
+                                            assetDownloadDelegate: delegate!,
+                                            delegateQueue: OperationQueue.main)
+        
+        let urlAsset = AVURLAsset(url: configuration.url)
+        if #available(iOS 10.0, *) {
+            guard let task = session!.makeAssetDownloadTask(asset: urlAsset,
+                                                            assetTitle: configuration.name,
+                                                            assetArtworkData: configuration.artwork,
+                                                            options: downloadOptions) else {
+                // This method may return nil if the AVAssetDownloadURLSession has been invalidated.
+                onError(self, .downloadSessionInvalidated)
+                return
+            }
+            self.task = task
+            task.taskDescription = configuration.name
+            
+            task.resume()
+        }
+        else {
+            guard let destination = configuration.destination else {
+                onError(self, .storageUrlNotFound)
+                return
+            }
+            
+            guard let task = session!.makeAssetDownloadTask(asset: urlAsset,
+                                                            destinationURL: destination,
+                                                            options: downloadOptions) else {
+                // This method may return nil if the URLSession has been invalidated
+                onError(self, .downloadSessionInvalidated)
+                return
+            }
+            
+            self.task = task
+            task.taskDescription = configuration.name
+            
+            task.resume()
+        }
+    }
+    
+    private var downloadOptions: [String: Any]? {
+        var options: [String: Any] = [:]
+        
+        if let bitrate = requiredBitrate {
+            options[AVAssetDownloadTaskMinimumRequiredMediaBitrateKey] = bitrate
+        }
+        
+        if let mediaSelection = self.mediaSelection {
+            options[AVAssetDownloadTaskMediaSelectionKey] = mediaSelection
+        }
+        
+        return options
     }
     
     public func suspend() {
@@ -273,10 +332,18 @@ public struct AvailableMediaTracks {
 //    @available(iOS 10.0, *)
 //    internal let cache: AVAssetCache
     
-    var subtitles: [AVMediaSelection] {
-        let mediaGroup = asset.mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicLegible)
+    var availableSubtitles: AVMediaSelectionGroup? {
+        return asset.mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicLegible)
+    }
+    
+    var availableAudioTracks: AVMediaSelectionGroup? {
+        return asset.mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicAudible)
+    }
+    
+    var availableVideoTracks: AVMediaSelectionGroup? {
+        return asset.mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicVisual)
         
-        return []
+        // THEN SELECT `availableVideoTracks.options.first` for example 
     }
 }
 
@@ -293,7 +360,7 @@ public struct Downloader {
     @available(iOS, introduced: 9.0, deprecated: 10.0)
     public static func download(mediaLocator: URL, to destination: URL) -> DownloadTask {
         let configuration = DownloadTask.Configuration(url: mediaLocator,
-                                                       name: nil,
+                                                       name: UUID().uuidString,
                                                        artwork: nil,
                                                        destination: destination)
         return DownloadTask(configuration: configuration)
