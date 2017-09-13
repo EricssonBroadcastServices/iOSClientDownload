@@ -397,7 +397,9 @@ public protocol DownloadEventPublisher {
     
     func onPlaybackReady(callback: @escaping (Self, URL) -> Void) -> Self
     
-    func onAdditionalMediaWanted(callback: @escaping (Self, AdditionalMedia) -> MediaOption?) -> Self
+    func onShouldDownloadMediaOption(callback: @escaping (Self, AdditionalMedia) -> MediaOption?) -> Self
+    
+    func onDownloadingMediaOption(callback: @escaping (Self, MediaOption) -> Void) -> Self
 }
 
 public struct MediaOption: Equatable {
