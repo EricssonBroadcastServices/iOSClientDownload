@@ -81,11 +81,14 @@ public final class DownloadTask {
     }
     
     fileprivate func initialDownload() {
+        // Fetch the targeted bitrate
+        let options = requiredBitrate != nil ? [AVAssetDownloadTaskMinimumRequiredMediaBitrateKey: requiredBitrate!] : nil
+        
         if #available(iOS 10.0, *) {
             guard let task = session.makeAssetDownloadTask(asset: urlAsset,
                                                            assetTitle: configuration.name,
                                                            assetArtworkData: configuration.artwork,
-                                                           options: downloadOptions) else {
+                                                           options: options) else {
                 // This method may return nil if the AVAssetDownloadURLSession has been invalidated.
                 onError(self, .downloadSessionInvalidated)
                 return
@@ -103,7 +106,7 @@ public final class DownloadTask {
             
             guard let task = session.makeAssetDownloadTask(asset: urlAsset,
                                                            destinationURL: destination,
-                                                           options: downloadOptions) else {
+                                                           options: options) else {
                 // This method may return nil if the URLSession has been invalidated
                 onError(self, .downloadSessionInvalidated)
                 return
@@ -116,19 +119,10 @@ public final class DownloadTask {
         }
     }
     
-    private var downloadOptions: [String: Any]? {
-        var options: [String: Any] = [:]
-        
-        if let bitrate = requiredBitrate {
-            options[AVAssetDownloadTaskMinimumRequiredMediaBitrateKey] = bitrate
-        }
-        
-        if let mediaSelection = self.resolvedMediaSelection {
-            options[AVAssetDownloadTaskMediaSelectionKey] = mediaSelection
-        }
-        
-        return options
-    }
+    
+//        if let mediaSelection = self.resolvedMediaSelection {
+//            options[AVAssetDownloadTaskMediaSelectionKey] = mediaSelection
+//        }
     
     public func suspend() {
         // If a download has been started, it can be stopped. AVAssetDownloadTask inherits from NSURLSessionTask, and downloads can be suspended or cancelled using the corresponding methods inherited from NSURLSessionTask. In the case where a download is stopped and there is no intention of resuming it, apps are responsible for deleting the portion of the asset already downloaded to a user’s device. The NSURLSessionTask documentation on developer.apple.com contains more details about this process.
@@ -142,17 +136,9 @@ public final class DownloadTask {
     // Configuration
     fileprivate var requiredBitrate: Int64?
     public func use(bitrate: Int64?) -> Self {
-        // assetDownloadURLSession.makeAssetDownloadTask(asset: asset.urlAsset, assetTitle: asset.name, assetArtworkData: nil, options: [AVAssetDownloadTaskMinimumRequiredMediaBitrateKey: 265000])
         requiredBitrate = bitrate
         return self
     }
-    
-//    fileprivate var mediaSelection: AVMediaSelection?
-//    public func use(mediaSelection: AVMediaSelection) -> Self {
-//        // The media selection can be set on a AVAssetDownloadTask object using the AVAssetDownloadTaskMediaSelectionKey.
-//        self.mediaSelection = mediaSelection
-//        return self
-//    }
     
     public func allow(cellularAccess: Bool) -> Self {
         // URLSessionConfiguration.allowsCellularAccess
@@ -327,16 +313,19 @@ public protocol DownloadEventPublisher {
     func onPlaybackReady(callback: @escaping (Self, URL) -> Void) -> Self
 }
 
-public struct SubtitleTrack {
-    
+public struct AdditionalSubtitle {
+    internal let group: AVMediaSelectionGroup
+    public let option: AVMediaSelectionOption
 }
 
-public struct VideoTrack {
-    
+public struct AdditionalVideo {
+    internal let group: AVMediaSelectionGroup
+    public let option: AVMediaSelectionOption
 }
 
-public struct AudioTrack {
-    
+public struct AdditionalAudio {
+    internal let group: AVMediaSelectionGroup
+    public let option: AVMediaSelectionOption
 }
 
 extension AVURLAsset {
@@ -353,12 +342,44 @@ extension AVURLAsset {
     }
 }
 
-public struct MediaTracks {
+public struct AdditionalMedia {
     internal let asset: AVURLAsset
     
-//    @available(iOS 10.0, *)
-//    internal let cache: AVAssetCache
+    public var subtitles: [AdditionalSubtitle] {
+        guard let group = asset.mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicLegible) else { return [] }
+        
+        let mediaOptions = avaliableOptions(for: group)
+        
+        return mediaOptions.map{ AdditionalSubtitle(group: group, option: $0) }
+    }
     
+    public var audio: [AdditionalAudio] {
+        guard let group = asset.mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicAudible) else { return [] }
+        
+        let mediaOptions = avaliableOptions(for: group)
+        
+        return mediaOptions.map{ AdditionalAudio(group: group, option: $0) }
+    }
+    
+    public var video: [AdditionalVideo] {
+        guard let group = asset.mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicVisual) else { return [] }
+        
+        let mediaOptions = avaliableOptions(for: group)
+        
+        return mediaOptions.map{ AdditionalVideo(group: group, option: $0) }
+    }
+    
+    private func avaliableOptions(for group: AVMediaSelectionGroup) -> [AVMediaSelectionOption] {
+        let options = group.options
+        if #available(iOS 10.0, *), let cache = asset.assetCache {
+            let savedOptions = cache.mediaSelectionOptions(in: group)
+            
+            return options.filter{ !savedOptions.contains($0) }
+        }
+        else {
+            return options
+        }
+    }
 }
 
 public struct Downloader {
