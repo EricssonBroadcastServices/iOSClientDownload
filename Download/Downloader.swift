@@ -55,8 +55,15 @@ public final class DownloadTask {
     fileprivate var configuration: Configuration
     fileprivate let sessionConfiguration: URLSessionConfiguration
     fileprivate var task: AVAssetDownloadTask?
-    fileprivate var session: AVAssetDownloadURLSession?
-    fileprivate var delegate: DownloadDelegate?
+    fileprivate lazy var session: AVAssetDownloadURLSession = { [unowned self] in
+        // Create the AVAssetDownloadURLSession using the configuration.
+        return AVAssetDownloadURLSession(configuration: self.sessionConfiguration,
+                                         assetDownloadDelegate: self.delegate,
+                                         delegateQueue: OperationQueue.main)
+    }()
+    fileprivate lazy var delegate: DownloadDelegate = { [unowned self] in
+        return DownloadDelegate(task: self)
+    }()
     
     internal init(configuration: Configuration) {
         self.configuration = configuration
@@ -74,19 +81,11 @@ public final class DownloadTask {
     }
     
     fileprivate func initialDownload() {
-        
-        delegate = DownloadDelegate(task: self)
-        
-        // Create the AVAssetDownloadURLSession using the configuration.
-        session = AVAssetDownloadURLSession(configuration: sessionConfiguration,
-                                            assetDownloadDelegate: delegate!,
-                                            delegateQueue: OperationQueue.main)
-        
         if #available(iOS 10.0, *) {
-            guard let task = session!.makeAssetDownloadTask(asset: urlAsset,
-                                                            assetTitle: configuration.name,
-                                                            assetArtworkData: configuration.artwork,
-                                                            options: downloadOptions) else {
+            guard let task = session.makeAssetDownloadTask(asset: urlAsset,
+                                                           assetTitle: configuration.name,
+                                                           assetArtworkData: configuration.artwork,
+                                                           options: downloadOptions) else {
                 // This method may return nil if the AVAssetDownloadURLSession has been invalidated.
                 onError(self, .downloadSessionInvalidated)
                 return
@@ -102,9 +101,9 @@ public final class DownloadTask {
                 return
             }
             
-            guard let task = session!.makeAssetDownloadTask(asset: urlAsset,
-                                                            destinationURL: destination,
-                                                            options: downloadOptions) else {
+            guard let task = session.makeAssetDownloadTask(asset: urlAsset,
+                                                           destinationURL: destination,
+                                                           options: downloadOptions) else {
                 // This method may return nil if the URLSession has been invalidated
                 onError(self, .downloadSessionInvalidated)
                 return
