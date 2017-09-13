@@ -49,15 +49,22 @@ public final class DownloadTask {
     
     
     ///
-    fileprivate var mediaSelection: AVMediaSelection?
+    fileprivate var resolvedMediaSelection: AVMediaSelection?
     
+    fileprivate var urlAsset: AVURLAsset
     fileprivate var configuration: Configuration
+    fileprivate let sessionConfiguration: URLSessionConfiguration
     fileprivate var task: AVAssetDownloadTask?
     fileprivate var session: AVAssetDownloadURLSession?
     fileprivate var delegate: DownloadDelegate?
     
     internal init(configuration: Configuration) {
         self.configuration = configuration
+        
+        // Create the configuration for the AVAssetDownloadURLSession.
+        sessionConfiguration = URLSessionConfiguration.background(withIdentifier: "EMP-Identifier")
+        
+        urlAsset = AVURLAsset(url: configuration.url)
     }
     
     // Controls
@@ -66,19 +73,15 @@ public final class DownloadTask {
         
     }
     
-    fileprivate func startDownload() {
-        // Create the configuration for the AVAssetDownloadURLSession.
-        let backgroundConfiguration = URLSessionConfiguration.background(withIdentifier: "AAPL-Identifier")
-        backgroundConfiguration.allowsCellularAccess = self.cellularAccess
+    fileprivate func initialDownload() {
         
         delegate = DownloadDelegate(task: self)
         
         // Create the AVAssetDownloadURLSession using the configuration.
-        session = AVAssetDownloadURLSession(configuration: backgroundConfiguration,
+        session = AVAssetDownloadURLSession(configuration: sessionConfiguration,
                                             assetDownloadDelegate: delegate!,
                                             delegateQueue: OperationQueue.main)
         
-        let urlAsset = AVURLAsset(url: configuration.url)
         if #available(iOS 10.0, *) {
             guard let task = session!.makeAssetDownloadTask(asset: urlAsset,
                                                             assetTitle: configuration.name,
@@ -121,7 +124,7 @@ public final class DownloadTask {
             options[AVAssetDownloadTaskMinimumRequiredMediaBitrateKey] = bitrate
         }
         
-        if let mediaSelection = self.mediaSelection {
+        if let mediaSelection = self.resolvedMediaSelection {
             options[AVAssetDownloadTaskMediaSelectionKey] = mediaSelection
         }
         
@@ -152,11 +155,10 @@ public final class DownloadTask {
 //        return self
 //    }
     
-    fileprivate var cellularAccess: Bool = false
     public func allow(cellularAccess: Bool) -> Self {
         // URLSessionConfiguration.allowsCellularAccess
         // AVAssetDownloadURLSession(configuration: backgroundConfiguration, assetDownloadDelegate: self, delegateQueue: OperationQueue.main)
-        self.cellularAccess = cellularAccess
+        sessionConfiguration.allowsCellularAccess = cellularAccess
         return self
     }
     
@@ -301,7 +303,7 @@ extension DownloadDelegate: AVAssetDownloadDelegate {
     
     @available(iOS 9.0, *)
     public func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didResolve resolvedMediaSelection: AVMediaSelection) {
-        downloadTask.mediaSelection = resolvedMediaSelection
+        downloadTask.resolvedMediaSelection = resolvedMediaSelection
     }
 }
 
@@ -326,25 +328,38 @@ public protocol DownloadEventPublisher {
     func onPlaybackReady(callback: @escaping (Self, URL) -> Void) -> Self
 }
 
-public struct AvailableMediaTracks {
+public struct SubtitleTrack {
+    
+}
+
+public struct VideoTrack {
+    
+}
+
+public struct AudioTrack {
+    
+}
+
+extension AVURLAsset {
+    var availableSubtitles: AVMediaSelectionGroup? {
+        return mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicLegible)
+    }
+    
+    var availableAudioTracks: AVMediaSelectionGroup? {
+        return mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicAudible)
+    }
+    
+    var availableVideoTracks: AVMediaSelectionGroup? {
+        return mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicVisual)
+    }
+}
+
+public struct MediaTracks {
     internal let asset: AVURLAsset
     
 //    @available(iOS 10.0, *)
 //    internal let cache: AVAssetCache
     
-    var availableSubtitles: AVMediaSelectionGroup? {
-        return asset.mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicLegible)
-    }
-    
-    var availableAudioTracks: AVMediaSelectionGroup? {
-        return asset.mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicAudible)
-    }
-    
-    var availableVideoTracks: AVMediaSelectionGroup? {
-        return asset.mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicVisual)
-        
-        // THEN SELECT `availableVideoTracks.options.first` for example 
-    }
 }
 
 public struct Downloader {
