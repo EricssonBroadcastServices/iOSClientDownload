@@ -23,6 +23,12 @@ public enum DownloadError: Error {
     case storageUrlNotFound
     case completedWithError(error: Error)
     case failedToDeleteMedia(error: Error)
+    case canceledTaskFailedToDeleteLocalMedia
+    case downloadSessionInvalidated
+}
+
+public protocol OfflineFairplayRequester: AVAssetResourceLoaderDelegate {
+    
 }
 
 public final class DownloadTask {
@@ -39,7 +45,7 @@ public final class DownloadTask {
     
     internal struct Configuration {
         let url: URL
-        let name: String?
+        let name: String
         let artwork: Data?
         
         /// location.bookmarkData()
@@ -49,58 +55,135 @@ public final class DownloadTask {
         var destination: URL?
     }
     
-//    internal struct Persistence {
-//        let location: URL
-//        
-//    }
     
-    ///
-    fileprivate var mediaSelection: AVMediaSelection?
+    ///  During the initial asset download, the user’s default media selections—their primary audio and video tracks—are downloaded. If additional media selections such as subtitles, closed captions, or alternative audio tracks are found, the session delegate’s URLSession:assetDownloadTask:didResolveMediaSelection: method is called, indicating that additional media selections exist on the server. To download additional media selections, save a reference to this resolved AVMediaSelection object so you can create subsequent download tasks to be executed serially.
+    fileprivate var resolvedMediaSelection: AVMediaSelection?
     
-//    fileprivate var persistence: Persistence?
+    fileprivate var urlAsset: AVURLAsset
     fileprivate var configuration: Configuration
+    fileprivate var fairplayRequester: OfflineFairplayRequester?
+    
+    fileprivate let sessionConfiguration: URLSessionConfiguration
     fileprivate var task: AVAssetDownloadTask?
-    fileprivate var session: AVAssetDownloadURLSession?
+    
+    fileprivate lazy var session: AVAssetDownloadURLSession = { [unowned self] in
+        // Create the AVAssetDownloadURLSession using the configuration.
+        return AVAssetDownloadURLSession(configuration: self.sessionConfiguration,
+                                         assetDownloadDelegate: self.delegate,
+                                         delegateQueue: OperationQueue.main)
+    }()
+    
+    fileprivate lazy var delegate: DownloadDelegate = { [unowned self] in
+        return DownloadDelegate(task: self)
+    }()
     
     internal init(configuration: Configuration) {
         self.configuration = configuration
+        
+        // Create the configuration for the AVAssetDownloadURLSession.
+        sessionConfiguration = URLSessionConfiguration.background(withIdentifier: configuration.name + "-assetDownloadURLSession") // TODO: Should the configuration be per downloadTask or per `Download` module. IE do we use one per download or one for the entire module?
+        
+        urlAsset = AVURLAsset(url: configuration.url)
+    }
+    
+    // MARK: FairPlay
+    public func fairplay(requester: OfflineFairplayRequester) -> DownloadTask {
+        fairplayRequester = requester
+        urlAsset.resourceLoader.setDelegate(requester, queue: DispatchQueue(label: configuration.name + "-offlineFairplayLoader"))
+        return self
     }
     
     // Controls
     public func resume() {
         // AVAssetDownloadTask provides the ability to resume previously stopped downloads under certain circumstances. To do so, simply instantiate a new AVAssetDownloadTask with an AVURLAsset instantiated with a file NSURL pointing to the partially downloaded bundle with the desired download options, and the download will continue restoring any previously downloaded data. FPS keys remain encrypted in persisted form during this process.
-        
+        if task == nil {
+            initialDownload()
+        }
+        else {
+            task?.resume()
+            onResumed(self)
+        }
     }
+    
+    fileprivate func initialDownload() {
+        // Fetch the targeted bitrate
+        let options = requiredBitrate != nil ? [AVAssetDownloadTaskMinimumRequiredMediaBitrateKey: requiredBitrate!] : nil
+        
+        startTask(with: options) { error in
+            guard error == nil else {
+                onError(self, error!)
+                return
+            }
+            onStarted(self)
+        }
+    }
+    
+    /// NOTE: Can/will replacing the previous task cause problems? Investigate
+    fileprivate func startTask(with options: [String: Any]?, callback: (DownloadError?) -> Void) {
+        if #available(iOS 10.0, *) {
+            guard let task = session.makeAssetDownloadTask(asset: urlAsset,
+                                                           assetTitle: configuration.name,
+                                                           assetArtworkData: configuration.artwork,
+                                                           options: options) else {
+                // This method may return nil if the AVAssetDownloadURLSession has been invalidated.
+                callback(.downloadSessionInvalidated)
+                return
+            }
+            self.task = task
+            task.taskDescription = configuration.name
+            
+            task.resume()
+        }
+        else {
+            guard let destination = configuration.destination else {
+                onError(self, .storageUrlNotFound)
+                return
+            }
+            
+            guard let task = session.makeAssetDownloadTask(asset: urlAsset,
+                                                           destinationURL: destination,
+                                                           options: options) else {
+                // This method may return nil if the URLSession has been invalidated
+                callback(.downloadSessionInvalidated)
+                return
+            }
+            
+            self.task = task
+            task.taskDescription = configuration.name
+            
+            task.resume()
+        }
+    }
+    
     
     public func suspend() {
         // If a download has been started, it can be stopped. AVAssetDownloadTask inherits from NSURLSessionTask, and downloads can be suspended or cancelled using the corresponding methods inherited from NSURLSessionTask. In the case where a download is stopped and there is no intention of resuming it, apps are responsible for deleting the portion of the asset already downloaded to a user’s device. The NSURLSessionTask documentation on developer.apple.com contains more details about this process.
         
+        guard let task = self.task else { return }
+        task.suspend()
+        onSuspended(self)
     }
     
     public func cancel() {
         // Downloaded HLS assets can be deleted using [NSFileManager removeItemAtURL:] with the URL for the downloaded version of the asset. In addition, if a user deletes the app that downloaded the HLS assets, they will also delete all content that the app stored to disk.
+        
+        guard let task = self.task else { return }
+        task.cancel()
+        
+        // NOTE: `onCanceled` called once `didCompleteWithError` delegate methods is triggered
     }
     
     // Configuration
     fileprivate var requiredBitrate: Int64?
+    @discardableResult
     public func use(bitrate: Int64?) -> Self {
-        // assetDownloadURLSession.makeAssetDownloadTask(asset: asset.urlAsset, assetTitle: asset.name, assetArtworkData: nil, options: [AVAssetDownloadTaskMinimumRequiredMediaBitrateKey: 265000])
         requiredBitrate = bitrate
         return self
     }
     
-//    fileprivate var mediaSelection: AVMediaSelection?
-//    public func use(mediaSelection: AVMediaSelection) -> Self {
-//        // The media selection can be set on a AVAssetDownloadTask object using the AVAssetDownloadTaskMediaSelectionKey.
-//        self.mediaSelection = mediaSelection
-//        return self
-//    }
-    
-    fileprivate var cellularAccess: Bool = false
+    @discardableResult
     public func allow(cellularAccess: Bool) -> Self {
-        // URLSessionConfiguration.allowsCellularAccess
-        // AVAssetDownloadURLSession(configuration: backgroundConfiguration, assetDownloadDelegate: self, delegateQueue: OperationQueue.main)
-        self.cellularAccess = cellularAccess
+        sessionConfiguration.allowsCellularAccess = cellularAccess
         return self
     }
     
@@ -118,6 +201,28 @@ public final class DownloadTask {
     fileprivate var onProgress: (DownloadTask, Progress) -> Void = { _ in }
     fileprivate var onError: (DownloadTask, DownloadError) -> Void = { _ in }
     fileprivate var onPlaybackReady: (DownloadTask, URL) -> Void = { _ in }
+    fileprivate var onShouldDownloadMediaOption: ((DownloadTask, AdditionalMedia) -> MediaOption?) = { _ in return nil }
+    fileprivate var onDownloadingMediaOption: (DownloadTask, MediaOption) -> Void = { _ in }
+}
+
+extension DownloadTask {
+    /// Returns currently downloaded subtitles
+    @available(iOS 10.0, *)
+    public var localSubtitles: [MediaOption] {
+        return urlAsset.localSubtitles
+    }
+    
+    /// Returns currently downloaded subtitles
+    @available(iOS 10.0, *)
+    public var localAudio: [MediaOption] {
+        return urlAsset.localAudio
+    }
+    
+    /// Returns currently downloaded subtitles
+    @available(iOS 10.0, *)
+    public var localVideo: [MediaOption] {
+        return urlAsset.localVideo
+    }
 }
 
 extension DownloadTask: DownloadEventPublisher {
@@ -171,6 +276,18 @@ extension DownloadTask: DownloadEventPublisher {
         onPlaybackReady = callback
         return self
     }
+    
+    @discardableResult
+    public func onShouldDownloadMediaOption(callback: @escaping (DownloadTask, AdditionalMedia) -> MediaOption?) -> DownloadTask {
+        onShouldDownloadMediaOption = callback
+        return self
+    }
+    
+    @discardableResult
+    public func onDownloadingMediaOption(callback: @escaping (DownloadTask, MediaOption) -> Void) -> DownloadTask {
+        onDownloadingMediaOption = callback
+        return self
+    }
 }
 
 internal class DownloadDelegate: NSObject {
@@ -188,10 +305,9 @@ extension DownloadDelegate: URLSessionTaskDelegate {
             if let nsError = error as? NSError {
                 switch (nsError.domain, nsError.code) {
                 case (NSURLErrorDomain, NSURLErrorCancelled):
-                    // This task was canceled by user. URL was saved from `urlSession(_:assetDownloadTask:didFinishDownloadingTo:)`. Perform cleanup
+                    // This task was canceled by user. URL was saved from
                     guard let location = downloadTask.configuration.destination else {
-                        // TODO: Should we throw an error here when the local assets could not be found?
-                        downloadTask.onError(downloadTask, .storageUrlNotFound)
+                        downloadTask.onError(downloadTask, .canceledTaskFailedToDeleteLocalMedia)
                         return
                     }
                     
@@ -213,15 +329,45 @@ extension DownloadDelegate: URLSessionTaskDelegate {
         }
         else {
             // Success
+            guard let resolvedMedia = downloadTask.resolvedMediaSelection else {
+                // 1. No more media available. Trigger onCompleted
+                finalizeDownload()
+                return
+            }
             
-            // 1. Ask, by callback, if and which additional AVMediaSelectionOption's should be included
-            
-            
-            // 2. if done, Trigger onCompleted
-            
-            //            downloadTask.onCompleted(downloadTask, location)
+            // 2. Ask, by callback, if and which additional AVMediaSelectionOption's should be included
+            if let newSelection = downloadTask.onShouldDownloadMediaOption(downloadTask, AdditionalMedia(asset: downloadTask.urlAsset)) {
+                // 2.1 User indicated additional media is requested
+                let currentMediaOption = resolvedMedia.mutableCopy() as! AVMutableMediaSelection
+                
+                currentMediaOption.select(newSelection.option, in: newSelection.group)
+                
+                let options = [AVAssetDownloadTaskMediaSelectionKey: currentMediaOption]
+                
+                downloadTask.startTask(with: options) { [unowned self] error in
+                    guard error == nil else {
+                        self.downloadTask.onError(self.downloadTask, error!)
+                        return
+                    }
+                    self.downloadTask.onDownloadingMediaOption(self.downloadTask, newSelection)
+                }
+            }
+            else {
+                // 2.2 No additional media was requested
+                finalizeDownload()
+            }
         }
         
+    }
+    
+    private func finalizeDownload() {
+        guard let location = downloadTask.configuration.destination else {
+            // 3. Error when no storage url is found
+            downloadTask.onError(downloadTask, .storageUrlNotFound)
+            return
+        }
+        
+        downloadTask.onCompleted(downloadTask, location)
     }
 }
 
@@ -256,7 +402,7 @@ extension DownloadDelegate: AVAssetDownloadDelegate {
     
     @available(iOS 9.0, *)
     public func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didResolve resolvedMediaSelection: AVMediaSelection) {
-        downloadTask.mediaSelection = resolvedMediaSelection
+        downloadTask.resolvedMediaSelection = resolvedMediaSelection
     }
 }
 
@@ -279,18 +425,105 @@ public protocol DownloadEventPublisher {
     func onError(callback: @escaping (Self, DownloadEventError) -> Void) -> Self
     
     func onPlaybackReady(callback: @escaping (Self, URL) -> Void) -> Self
+    
+    func onShouldDownloadMediaOption(callback: @escaping (Self, AdditionalMedia) -> MediaOption?) -> Self
+    
+    func onDownloadingMediaOption(callback: @escaping (Self, MediaOption) -> Void) -> Self
 }
 
-public struct AvailableMediaTracks {
+public struct MediaOption: Equatable {
+    internal let group: AVMediaSelectionGroup
+    public let option: AVMediaSelectionOption
+    
+    public static func == (lhs: MediaOption, rhs: MediaOption) -> Bool {
+        return lhs.group == rhs.group && lhs.option == rhs.option
+    }
+}
+
+extension AVURLAsset {
+    // MARK: Subtitles
+    private var subtitleGroup: AVMediaSelectionGroup? {
+        return mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicLegible)
+    }
+    
+    var availableSubtitles: [MediaOption] {
+        guard let group = subtitleGroup else { return [] }
+        return group.options.map{ MediaOption(group: group, option: $0) }
+    }
+    
+    /// TODO: How do we find out the *locally* stored media in iOS 9.0?
+    @available(iOS 10.0, *)
+    var localSubtitles: [MediaOption] {
+        guard let group = subtitleGroup else { return [] }
+        return assetCache?.mediaSelectionOptions(in: group).map{ MediaOption(group: group, option: $0) } ?? []
+    }
+    
+    // MARK: Audio
+    private var audioGroup: AVMediaSelectionGroup? {
+        return mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicAudible)
+    }
+    
+    var availableAudio: [MediaOption] {
+        guard let group = audioGroup else { return [] }
+        return group.options.map{ MediaOption(group: group, option: $0) }
+    }
+    
+    /// TODO: How do we find out the *locally* stored media in iOS 9.0?
+    @available(iOS 10.0, *)
+    var localAudio: [MediaOption] {
+        guard let group = audioGroup else { return [] }
+        return assetCache?.mediaSelectionOptions(in: group).map{ MediaOption(group: group, option: $0) } ?? []
+    }
+    
+    // MARK: Video
+    private var videoGroup: AVMediaSelectionGroup? {
+        return mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicVisual)
+    }
+    
+    var availableVideo: [MediaOption] {
+        guard let group = videoGroup else { return [] }
+        return group.options.map{ MediaOption(group: group, option: $0) }
+    }
+    
+    /// TODO: How do we find out the *locally* stored media in iOS 9.0?
+    @available(iOS 10.0, *)
+    var localVideo: [MediaOption] {
+        guard let group = videoGroup else { return [] }
+        return assetCache?.mediaSelectionOptions(in: group).map{ MediaOption(group: group, option: $0) } ?? []
+    }
+}
+
+public struct AdditionalMedia {
     internal let asset: AVURLAsset
     
-//    @available(iOS 10.0, *)
-//    internal let cache: AVAssetCache
+    public var subtitles: [MediaOption] {
+        if #available(iOS 10.0, *) {
+            let local = asset.localSubtitles
+            return asset.availableSubtitles.filter{ !local.contains($0) }
+        }
+        else {
+            return asset.availableSubtitles
+        }
+    }
     
-    var subtitles: [AVMediaSelection] {
-        let mediaGroup = asset.mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicLegible)
-        
-        return []
+    public var audio: [MediaOption] {
+        if #available(iOS 10.0, *) {
+            let local = asset.localAudio
+            return asset.availableAudio.filter{ !local.contains($0) }
+        }
+        else {
+            return asset.availableAudio
+        }
+    }
+    
+    public var video: [MediaOption] {
+        if #available(iOS 10.0, *) {
+            let local = asset.localVideo
+            return asset.availableVideo.filter{ !local.contains($0) }
+        }
+        else {
+            return asset.availableVideo
+        }
     }
 }
 
@@ -307,7 +540,7 @@ public struct Downloader {
     @available(iOS, introduced: 9.0, deprecated: 10.0)
     public static func download(mediaLocator: URL, to destination: URL) -> DownloadTask {
         let configuration = DownloadTask.Configuration(url: mediaLocator,
-                                                       name: nil,
+                                                       name: UUID().uuidString,
                                                        artwork: nil,
                                                        destination: destination)
         return DownloadTask(configuration: configuration)
