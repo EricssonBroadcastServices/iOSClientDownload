@@ -32,6 +32,9 @@ public final class DownloadTask {
         
         /// Total size in bytes
         public let total: Int64
+
+        /// Percentage downloaded
+        public let percentage: Double
     }
     
     internal struct Configuration {
@@ -237,7 +240,18 @@ extension DownloadDelegate: AVAssetDownloadDelegate {
     
     @available(iOS 9.0, *)
     public func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didLoad timeRange: CMTimeRange, totalTimeRangesLoaded loadedTimeRanges: [NSValue], timeRangeExpectedToLoad: CMTimeRange) {
-        
+        var percentComplete = 0.0
+
+        for range in loadedTimeRanges {
+            let loadedTimeRange = range.timeRangeValue
+            percentComplete += loadedTimeRange.duration.seconds / timeRangeExpectedToLoad.duration.seconds
+        }
+
+        // TODO: unfinished calculations for size and totalSize
+        let progress = DownloadTask.Progress(size: -1,
+                                             total: -1,
+                                             progress: percentComplete * 100)
+        downloadTask.onProgress(downloadTask, progress)
     }
     
     @available(iOS 9.0, *)
