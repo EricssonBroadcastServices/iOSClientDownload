@@ -396,7 +396,7 @@ extension DownloadDelegate: AVAssetDownloadDelegate {
         // TODO: unfinished calculations for size and totalSize
         let progress = DownloadTask.Progress(size: -1,
                                              total: -1,
-                                             progress: percentComplete * 100)
+                                             percentage: percentComplete * 100)
         downloadTask.onProgress(downloadTask, progress)
     }
     
