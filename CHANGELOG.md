@@ -6,3 +6,5 @@
 NO RELEASE YET
 
 #### Features
+
+* `EMP-10327` Initial download functionality added.
