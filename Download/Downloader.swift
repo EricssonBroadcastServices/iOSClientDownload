@@ -19,12 +19,26 @@ import AVFoundation
 
 public enum DownloadError: Error {
     case generalError(error: Error)
+    case fairplay(reason: FairplayError)
     
+    /// Errors associated with *Fairplay* can be categorized, broadly, into two types:
+    /// * Fairplay server related *DRM* errors.
+    /// * Application related.
+    ///
+    /// Server related issues most likely stem from an invalid or broken backend configuration. Application issues range from parsing errors, unexpected server response or networking issues.
+    public enum FairplayError {
+        // MARK: Application Certificate
+        /// Networking issues caused the application to fail while verifying the *Fairplay* DRM.
+        case networking(error: Error)
+    }
     case storageUrlNotFound
     case completedWithError(error: Error)
     case failedToDeleteMedia(error: Error)
     case canceledTaskFailedToDeleteLocalMedia
     case downloadSessionInvalidated
+    
+    /// Unable to load a valid `URL` from path.
+    case invalidMediaUrl(path: String)
 }
 
 public protocol OfflineFairplayRequester: AVAssetResourceLoaderDelegate {
@@ -77,13 +91,18 @@ public final class DownloadTask {
         return DownloadDelegate(task: self)
     }()
     
-    internal init(configuration: Configuration) {
+    internal init(configuration: Configuration, fairplayRequester: OfflineFairplayRequester? = nil) {
         self.configuration = configuration
+        self.fairplayRequester = fairplayRequester
         
         // Create the configuration for the AVAssetDownloadURLSession.
         sessionConfiguration = URLSessionConfiguration.background(withIdentifier: configuration.name + "-assetDownloadURLSession") // TODO: Should the configuration be per downloadTask or per `Download` module. IE do we use one per download or one for the entire module?
         
         urlAsset = AVURLAsset(url: configuration.url)
+        
+        if fairplayRequester != nil {
+            urlAsset.resourceLoader.setDelegate(fairplayRequester, queue: DispatchQueue(label: configuration.name + "-fairplayLoader"))
+        }
     }
     
     // MARK: FairPlay
@@ -529,21 +548,37 @@ public struct AdditionalMedia {
 
 public struct Downloader {
     @available(iOS 10.0, *)
-    public static func download(mediaLocator: URL, named name: String = UUID().uuidString, artwork artworkData: Data? = nil) -> DownloadTask {
+    public static func download(mediaLocator: String, named name: String = UUID().uuidString, artwork artworkData: Data? = nil, using fairplayRequester: OfflineFairplayRequester? = nil) throws -> DownloadTask {
+        guard let url = URL(string: mediaLocator) else {
+            throw DownloadError.invalidMediaUrl(path: mediaLocator)
+        }
+        return download(mediaLocator: url, named: name, artwork: artworkData, using: fairplayRequester)
+    }
+    
+    @available(iOS 10.0, *)
+    public static func download(mediaLocator: URL, named name: String = UUID().uuidString, artwork artworkData: Data? = nil, using fairplayRequester: OfflineFairplayRequester? = nil) -> DownloadTask {
         let configuration = DownloadTask.Configuration(url: mediaLocator,
                                                        name: name,
                                                        artwork: artworkData,
                                                        destination: nil)
-        return DownloadTask(configuration: configuration)
+        return DownloadTask(configuration: configuration, fairplayRequester: fairplayRequester)
     }
     
     @available(iOS, introduced: 9.0, deprecated: 10.0)
-    public static func download(mediaLocator: URL, to destination: URL) -> DownloadTask {
+    public static func download(mediaLocator: String, to destination: URL, using fairplayRequester: OfflineFairplayRequester? = nil) throws -> DownloadTask {
+        guard let url = URL(string: mediaLocator) else {
+            throw DownloadError.invalidMediaUrl(path: mediaLocator)
+        }
+        return download(mediaLocator: url, to: destination, using: fairplayRequester)
+    }
+    
+    @available(iOS, introduced: 9.0, deprecated: 10.0)
+    public static func download(mediaLocator: URL, to destination: URL, using fairplayRequester: OfflineFairplayRequester? = nil) -> DownloadTask {
         let configuration = DownloadTask.Configuration(url: mediaLocator,
                                                        name: UUID().uuidString,
                                                        artwork: nil,
                                                        destination: destination)
-        return DownloadTask(configuration: configuration)
+        return DownloadTask(configuration: configuration, fairplayRequester: fairplayRequester)
     }
     
 //    public static func offline(assetId: String) -> OfflineMediaAsset? { }
