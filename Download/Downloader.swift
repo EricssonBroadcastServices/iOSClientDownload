@@ -41,7 +41,7 @@ public enum DownloadError: Error {
     case invalidMediaUrl(path: String)
 }
 
-public protocol OfflineFairplayRequester: AVAssetResourceLoaderDelegate {
+public protocol DownloadFairplayRequester: AVAssetResourceLoaderDelegate {
     
 }
 
@@ -75,7 +75,7 @@ public final class DownloadTask {
     
     fileprivate var urlAsset: AVURLAsset
     fileprivate var configuration: Configuration
-    fileprivate var fairplayRequester: OfflineFairplayRequester?
+    fileprivate var fairplayRequester: DownloadFairplayRequester?
     
     fileprivate let sessionConfiguration: URLSessionConfiguration
     fileprivate var task: AVAssetDownloadTask?
@@ -91,7 +91,7 @@ public final class DownloadTask {
         return DownloadDelegate(task: self)
     }()
     
-    internal init(configuration: Configuration, fairplayRequester: OfflineFairplayRequester? = nil) {
+    internal init(configuration: Configuration, fairplayRequester: DownloadFairplayRequester? = nil) {
         self.configuration = configuration
         self.fairplayRequester = fairplayRequester
         
@@ -106,7 +106,7 @@ public final class DownloadTask {
     }
     
     // MARK: FairPlay
-    public func fairplay(requester: OfflineFairplayRequester) -> DownloadTask {
+    public func fairplay(requester: DownloadFairplayRequester) -> DownloadTask {
         fairplayRequester = requester
         urlAsset.resourceLoader.setDelegate(requester, queue: DispatchQueue(label: configuration.name + "-offlineFairplayLoader"))
         return self
@@ -548,7 +548,7 @@ public struct AdditionalMedia {
 
 public struct Downloader {
     @available(iOS 10.0, *)
-    public static func download(mediaLocator: String, named name: String = UUID().uuidString, artwork artworkData: Data? = nil, using fairplayRequester: OfflineFairplayRequester? = nil) throws -> DownloadTask {
+    public static func download(mediaLocator: String, named name: String = UUID().uuidString, artwork artworkData: Data? = nil, using fairplayRequester: DownloadFairplayRequester? = nil) throws -> DownloadTask {
         guard let url = URL(string: mediaLocator) else {
             throw DownloadError.invalidMediaUrl(path: mediaLocator)
         }
@@ -556,7 +556,7 @@ public struct Downloader {
     }
     
     @available(iOS 10.0, *)
-    public static func download(mediaLocator: URL, named name: String = UUID().uuidString, artwork artworkData: Data? = nil, using fairplayRequester: OfflineFairplayRequester? = nil) -> DownloadTask {
+    public static func download(mediaLocator: URL, named name: String = UUID().uuidString, artwork artworkData: Data? = nil, using fairplayRequester: DownloadFairplayRequester? = nil) -> DownloadTask {
         let configuration = DownloadTask.Configuration(url: mediaLocator,
                                                        name: name,
                                                        artwork: artworkData,
@@ -565,7 +565,7 @@ public struct Downloader {
     }
     
     @available(iOS, introduced: 9.0, deprecated: 10.0)
-    public static func download(mediaLocator: String, to destination: URL, using fairplayRequester: OfflineFairplayRequester? = nil) throws -> DownloadTask {
+    public static func download(mediaLocator: String, to destination: URL, using fairplayRequester: DownloadFairplayRequester? = nil) throws -> DownloadTask {
         guard let url = URL(string: mediaLocator) else {
             throw DownloadError.invalidMediaUrl(path: mediaLocator)
         }
@@ -573,7 +573,7 @@ public struct Downloader {
     }
     
     @available(iOS, introduced: 9.0, deprecated: 10.0)
-    public static func download(mediaLocator: URL, to destination: URL, using fairplayRequester: OfflineFairplayRequester? = nil) -> DownloadTask {
+    public static func download(mediaLocator: URL, to destination: URL, using fairplayRequester: DownloadFairplayRequester? = nil) -> DownloadTask {
         let configuration = DownloadTask.Configuration(url: mediaLocator,
                                                        name: UUID().uuidString,
                                                        artwork: nil,
