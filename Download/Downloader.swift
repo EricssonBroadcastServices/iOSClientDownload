@@ -72,9 +72,9 @@ public class SessionManager {
 
 extension SessionManager {
     @available(iOS 10.0, *)
-    public func download(mediaLocator: URL, named name: String = UUID().uuidString, artwork artworkData: Data? = nil, using fairplayRequester: DownloadFairplayRequester? = nil) -> DownloadTask {
+    public func download(mediaLocator: URL, named name: String? = nil, artwork artworkData: Data? = nil, using fairplayRequester: DownloadFairplayRequester? = nil) -> DownloadTask {
         let configuration = DownloadTask.Configuration(url: mediaLocator,
-                                                       name: name,
+                                                       name: name ?? UUID().uuidString,
                                                        artwork: artworkData,
                                                        destination: nil)
         
@@ -729,7 +729,7 @@ public struct AdditionalMedia {
 
 public struct Downloader {
     @available(iOS 10.0, *)
-    public static func download(mediaLocator: String, named name: String = UUID().uuidString, artwork artworkData: Data? = nil, using fairplayRequester: DownloadFairplayRequester? = nil) throws -> DownloadTask {
+    public static func download(mediaLocator: String, named name: String? = nil, artwork artworkData: Data? = nil, using fairplayRequester: DownloadFairplayRequester? = nil) throws -> DownloadTask {
         //"https://devimages.apple.com.edgekey.net/streaming/examples/bipbop_4x3/bipbop_4x3_variant.m3u8"
         guard let url = URL(string: mediaLocator) else {
             throw DownloadError.invalidMediaUrl(path: mediaLocator)
@@ -738,7 +738,7 @@ public struct Downloader {
     }
     
     @available(iOS 10.0, *)
-    public static func download(mediaLocator: URL, named name: String = UUID().uuidString, artwork artworkData: Data? = nil, using fairplayRequester: DownloadFairplayRequester? = nil) -> DownloadTask {
+    public static func download(mediaLocator: URL, named name: String? = nil, artwork artworkData: Data? = nil, using fairplayRequester: DownloadFairplayRequester? = nil) -> DownloadTask {
         return SessionManager
             .default
             .download(mediaLocator: mediaLocator,
