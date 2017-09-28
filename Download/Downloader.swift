@@ -31,8 +31,6 @@ public class SessionManager {
     /// `nil` by default.
     open var backgroundCompletionHandler: (() -> Void)?
     
-//    let queue = DispatchQueue(label: "org.alamofire.session-manager." + UUID().uuidString)
-    
     // MARK: - Lifecycle
     
     /// Creates an instance with the specified `configuration`, `delegate` and `serverTrustPolicyManager`.
@@ -53,19 +51,12 @@ public class SessionManager {
         self.session = AVAssetDownloadURLSession(configuration: configuration,
                                                  assetDownloadDelegate: delegate,
                                                  delegateQueue: OperationQueue.main)
+        
+        delegate.sessionDidFinishEventsForBackgroundURLSession = { [weak self] session in
+            guard let strongSelf = self else { return }
+            DispatchQueue.main.async { strongSelf.backgroundCompletionHandler?() }
+        }
     }
-//        commonInit()
-//    }
-//
-//
-//    private func commonInit() {
-//        delegate.sessionManager = self
-//
-//        delegate.sessionDidFinishEventsForBackgroundURLSession = { [weak self] session in
-////            guard let strongSelf = self else { return }
-////            DispatchQueue.main.async { strongSelf.backgroundCompletionHandler?() }
-//        }
-//    }
     
     deinit {
         session.invalidateAndCancel()
@@ -77,7 +68,6 @@ public class SessionManager {
 //        sessionConfiguration.allowsCellularAccess = cellularAccess
 //        return self
 //    }
-//
 }
 
 extension SessionManager {
@@ -106,12 +96,6 @@ public class SessionDelegate: NSObject {
     
     /// Overrides default behavior for URLSessionDelegate method `urlSessionDidFinishEvents(forBackgroundURLSession:)`.
     internal var sessionDidFinishEventsForBackgroundURLSession: ((URLSession) -> Void)?
-    
-    
-    
-    
-    
-//    weak var sessionManager: SessionManager?
     
     private var requests: [Int: DownloadTask] = [:]
     private let lock = NSLock()
@@ -233,18 +217,7 @@ extension SessionDelegate: URLSessionDelegate {
 
 public enum DownloadError: Error {
     case generalError(error: Error)
-    case fairplay(reason: FairplayError)
     
-    /// Errors associated with *Fairplay* can be categorized, broadly, into two types:
-    /// * Fairplay server related *DRM* errors.
-    /// * Application related.
-    ///
-    /// Server related issues most likely stem from an invalid or broken backend configuration. Application issues range from parsing errors, unexpected server response or networking issues.
-    public enum FairplayError {
-        // MARK: Application Certificate
-        /// Networking issues caused the application to fail while verifying the *Fairplay* DRM.
-        case networking(error: Error)
-    }
     case storageUrlNotFound
     case completedWithError(error: Error)
     case failedToDeleteMedia(error: Error)
@@ -296,9 +269,7 @@ public final class DownloadTask {
     }()
     
     fileprivate var task: AVAssetDownloadTask?
-    
     fileprivate let sessionManager: SessionManager
-    
     
     internal init(sessionManager: SessionManager, configuration: Configuration, fairplayRequester: DownloadFairplayRequester? = nil) {
         self.sessionManager = sessionManager
@@ -338,9 +309,9 @@ public final class DownloadTask {
     fileprivate func startTask(with options: [String: Any]?, callback: (DownloadError?) -> Void) {
         if #available(iOS 10.0, *) {
             DispatchQueue(label: "org.alamofire.session." + UUID().uuidString).sync {
-            let mngr = sessionManager.session
             
-            guard let task = mngr
+            guard let task = sessionManager
+                .session
                 .makeAssetDownloadTask(asset: urlAsset,
                                        assetTitle: configuration.name,
                                        assetArtworkData: configuration.artwork,
