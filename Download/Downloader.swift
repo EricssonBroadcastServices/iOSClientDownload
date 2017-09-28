@@ -9,13 +9,9 @@
 import Foundation
 import AVFoundation
 
-internal class SessionManager {
-    internal static let defaultSessionConfiguration = URLSessionConfiguration.background(withIdentifier: "com.emp.urlsession.download")
-    internal static let `default`: SessionManager = {
-        let configuration = SessionManager.defaultSessionConfiguration
-        
-        return SessionManager(configuration: configuration)
-    }()
+public class SessionManager {
+    internal static let defaultSessionConfiguration = URLSessionConfiguration.background(withIdentifier: "empTest")
+    internal static let `default` = SessionManager()//(configuration: SessionManager.defaultSessionConfiguration)
     
     /// The underlying session.
     internal let session: AVAssetDownloadURLSession
@@ -35,7 +31,7 @@ internal class SessionManager {
     /// `nil` by default.
     open var backgroundCompletionHandler: (() -> Void)?
     
-    let queue = DispatchQueue(label: "org.alamofire.session-manager." + UUID().uuidString)
+//    let queue = DispatchQueue(label: "org.alamofire.session-manager." + UUID().uuidString)
     
     // MARK: - Lifecycle
     
@@ -56,20 +52,20 @@ internal class SessionManager {
         self.delegate = delegate
         self.session = AVAssetDownloadURLSession(configuration: configuration,
                                                  assetDownloadDelegate: delegate,
-                                                 delegateQueue: nil)
-        
-        commonInit()
+                                                 delegateQueue: OperationQueue.main)
     }
-    
-    
-    private func commonInit() {
-        delegate.sessionManager = self
-        
-        delegate.sessionDidFinishEventsForBackgroundURLSession = { [weak self] session in
-            guard let strongSelf = self else { return }
-            DispatchQueue.main.async { strongSelf.backgroundCompletionHandler?() }
-        }
-    }
+//        commonInit()
+//    }
+//
+//
+//    private func commonInit() {
+//        delegate.sessionManager = self
+//
+//        delegate.sessionDidFinishEventsForBackgroundURLSession = { [weak self] session in
+////            guard let strongSelf = self else { return }
+////            DispatchQueue.main.async { strongSelf.backgroundCompletionHandler?() }
+//        }
+//    }
     
     deinit {
         session.invalidateAndCancel()
@@ -106,28 +102,28 @@ extension SessionManager {
     }
 }
 
-internal class SessionDelegate: NSObject {
+public class SessionDelegate: NSObject {
     
     /// Overrides default behavior for URLSessionDelegate method `urlSessionDidFinishEvents(forBackgroundURLSession:)`.
-    open var sessionDidFinishEventsForBackgroundURLSession: ((URLSession) -> Void)?
+    internal var sessionDidFinishEventsForBackgroundURLSession: ((URLSession) -> Void)?
     
     
     
     
     
-    weak var sessionManager: SessionManager?
+//    weak var sessionManager: SessionManager?
     
     private var requests: [Int: DownloadTask] = [:]
     private let lock = NSLock()
     
     /// Access the task delegate for the specified task in a thread-safe manner.
-    open subscript(task: AVAssetDownloadTask) -> DownloadTask? {
+    internal subscript(task: AVAssetDownloadTask) -> DownloadTask? {
         get {
-            lock.lock() ; defer { lock.unlock() }
+//            lock.lock() ; defer { lock.unlock() }
             return requests[task.taskIdentifier]
         }
         set {
-            lock.lock() ; defer { lock.unlock() }
+//            lock.lock() ; defer { lock.unlock() }
             requests[task.taskIdentifier] = newValue
         }
     }
@@ -171,6 +167,35 @@ extension SessionDelegate: AVAssetDownloadDelegate {
 }
 
 extension SessionDelegate: URLSessionTaskDelegate {
+    @available(iOS 11.0, *)
+    public func urlSession(_ session: URLSession, task: URLSessionTask, willBeginDelayedRequest request: URLRequest, completionHandler: @escaping (URLSession.DelayedRequestDisposition, URLRequest?) -> Swift.Void) {
+        
+    }
+    
+    public func urlSession(_ session: URLSession, taskIsWaitingForConnectivity task: URLSessionTask) {
+        
+    }
+    
+    public func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse, newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Swift.Void) {
+        
+    }
+    
+    public func urlSession(_ session: URLSession, task: URLSessionTask, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Swift.Void) {
+        
+    }
+    
+    public func urlSession(_ session: URLSession, task: URLSessionTask, needNewBodyStream completionHandler: @escaping (InputStream?) -> Swift.Void) {
+        
+    }
+    
+    public func urlSession(_ session: URLSession, task: URLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
+        
+    }
+    
+    @available(iOS 10.0, *)
+    public func urlSession(_ session: URLSession, task: URLSessionTask, didFinishCollecting metrics: URLSessionTaskMetrics) {
+        
+    }
     
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         guard let assetDownloadTask = task as? AVAssetDownloadTask else {
@@ -185,7 +210,17 @@ extension SessionDelegate: URLSessionTaskDelegate {
 }
 
 extension SessionDelegate: URLSessionDelegate {
+    public func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
+        
+    }
     
+    public func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        
+    }
+    
+    public func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
+        
+    }
 }
 
 //public struct OfflineMediaAsset {
@@ -252,7 +287,7 @@ public final class DownloadTask {
     ///  During the initial asset download, the user’s default media selections—their primary audio and video tracks—are downloaded. If additional media selections such as subtitles, closed captions, or alternative audio tracks are found, the session delegate’s URLSession:assetDownloadTask:didResolveMediaSelection: method is called, indicating that additional media selections exist on the server. To download additional media selections, save a reference to this resolved AVMediaSelection object so you can create subsequent download tasks to be executed serially.
     fileprivate var resolvedMediaSelection: AVMediaSelection?
     
-    fileprivate var urlAsset: AVURLAsset
+    fileprivate let urlAsset: AVURLAsset
     fileprivate var configuration: Configuration
     fileprivate var fairplayRequester: DownloadFairplayRequester?
     
@@ -273,7 +308,7 @@ public final class DownloadTask {
         urlAsset = AVURLAsset(url: configuration.url)
         
         if fairplayRequester != nil {
-            urlAsset.resourceLoader.setDelegate(fairplayRequester, queue: DispatchQueue(label: configuration.name + "-fairplayLoader"))
+            urlAsset.resourceLoader.setDelegate(fairplayRequester, queue: DispatchQueue(label: configuration.name + "-offlineFairplayLoader"))
         }
     }
     
@@ -299,88 +334,13 @@ public final class DownloadTask {
         }
     }
     
-//    fileprivate func initialDownload() {
-////        restorableTask{ [weak self] task in
-////            guard let weakSelf = self else { return }
-////            if let restoredTask = task {
-////
-////            }
-////            else {
-////                // Fetch the targeted bitrate
-////                 let options = weakSelf.requiredBitrate != nil ? [AVAssetDownloadTaskMinimumRequiredMediaBitrateKey: weakSelf.requiredBitrate!] : nil
-////
-////                // Start a new task
-////                weakSelf.startTask(with: options) { error in
-////                    guard error == nil else {
-////                        weakSelf.onError(self!, error!)
-////                        return
-////                    }
-////                    weakSelf.onStarted(self!)
-////                }
-////            }
-////        }
-////
-//
-//        // BUG: Only ONE session is allowed per identifier
-//       let sess = session
-//
-//        print("TEST")
-//
-//        sess.getAllTasks{ [weak self] tasks in
-//            guard let weakSelf = self else { return }
-//            if let oldTask = tasks.first {
-//                weakSelf.task = oldTask as? AVAssetDownloadTask
-//                weakSelf.urlAsset = weakSelf.task!.urlAsset
-//
-//                if let fairplayRequester = weakSelf.fairplayRequester {
-//                    weakSelf.urlAsset.resourceLoader.setDelegate(fairplayRequester, queue: DispatchQueue(label: weakSelf.configuration.name + "-fairplayLoader"))
-//                }
-//
-//                weakSelf.task?.resume()
-//                weakSelf.onResumed(self!)
-//            }
-//            else {
-//                // Fetch the targeted bitrate
-//                let options = weakSelf.requiredBitrate != nil ? [AVAssetDownloadTaskMinimumRequiredMediaBitrateKey: weakSelf.requiredBitrate!] : nil
-//                weakSelf.startTask(with: options) { error in
-//                    guard error == nil else {
-//                        weakSelf.onError(self!, error!)
-//                        return
-//                    }
-//                    weakSelf.onStarted(self!)
-//                }
-//            }
-//        }
-//    }
-//
-//    fileprivate func restorableTask(callback: @escaping (AVAssetDownloadTask?, DownloadError?) -> Void) {
-//        session.getAllTasks{ [weak self] tasks in
-//            guard let weakSelf = self else {
-//                callback(nil, nil)
-//                return
-//            }
-//
-//            guard let oldTask = tasks.first else {
-//                callback(nil, nil)
-//                return
-//            }
-//            weakSelf.task = oldTask as? AVAssetDownloadTask
-//            weakSelf.urlAsset = weakSelf.task!.urlAsset
-//
-//            if let fairplayRequester = weakSelf.fairplayRequester {
-//                weakSelf.urlAsset.resourceLoader.setDelegate(fairplayRequester, queue: DispatchQueue(label: weakSelf.configuration.name + "-fairplayLoader"))
-//            }
-//
-//            weakSelf.task?.resume()
-//            weakSelf.onResumed(self!)
-//        }
-//    }
-//    
     /// NOTE: Can/will replacing the previous task cause problems? Investigate
     fileprivate func startTask(with options: [String: Any]?, callback: (DownloadError?) -> Void) {
         if #available(iOS 10.0, *) {
-            guard let task = sessionManager
-                .session
+            DispatchQueue(label: "org.alamofire.session." + UUID().uuidString).sync {
+            let mngr = sessionManager.session
+            
+            guard let task = mngr
                 .makeAssetDownloadTask(asset: urlAsset,
                                        assetTitle: configuration.name,
                                        assetArtworkData: configuration.artwork,
@@ -396,6 +356,7 @@ public final class DownloadTask {
             
             task.resume()
             callback(nil)
+            }
         }
         else {
             guard let destination = configuration.destination else {
@@ -553,15 +514,16 @@ extension DownloadTask: DownloadEventPublisher {
 }
 
 internal class DownloadTaskDelegate: NSObject {
-    internal weak var downloadTask: DownloadTask?
+    internal var downloadTask: DownloadTask?
     
     internal init(task: DownloadTask) {
         downloadTask = task
     }
 }
 
-extension DownloadTaskDelegate: URLSessionTaskDelegate {
-    public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+extension DownloadTaskDelegate {
+    internal func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        
         guard let downloadTask = downloadTask else { return }
         if let error = error {
             // Error
@@ -635,13 +597,13 @@ extension DownloadTaskDelegate: URLSessionTaskDelegate {
     }
 }
 
-extension DownloadTaskDelegate: AVAssetDownloadDelegate {
+extension DownloadTaskDelegate {
     /// NOTE: Will also be called when a partially downloaded asset is cancelled by the user
     /// Also called onError?
     ///
     /// This delegate callback should only be used to save the location URL somewhere in your application. Any additional work should be done in `URLSessionTaskDelegate.urlSession(_:task:didCompleteWithError:)`.
     @available(iOS 10.0, *)
-    public func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didFinishDownloadingTo location: URL) {
+    internal func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didFinishDownloadingTo location: URL) {
         guard let downloadTask = downloadTask else { return }
         
         // This is the location to save
@@ -650,7 +612,7 @@ extension DownloadTaskDelegate: AVAssetDownloadDelegate {
     }
     
     @available(iOS 9.0, *)
-    public func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didLoad timeRange: CMTimeRange, totalTimeRangesLoaded loadedTimeRanges: [NSValue], timeRangeExpectedToLoad: CMTimeRange) {
+    internal func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didLoad timeRange: CMTimeRange, totalTimeRangesLoaded loadedTimeRanges: [NSValue], timeRangeExpectedToLoad: CMTimeRange) {
         guard let downloadTask = downloadTask else { return }
         var percentComplete = 0.0
 
@@ -667,7 +629,7 @@ extension DownloadTaskDelegate: AVAssetDownloadDelegate {
     }
     
     @available(iOS 9.0, *)
-    public func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didResolve resolvedMediaSelection: AVMediaSelection) {
+    internal func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didResolve resolvedMediaSelection: AVMediaSelection) {
         guard let downloadTask = downloadTask else { return }
         downloadTask.resolvedMediaSelection = resolvedMediaSelection
     }
@@ -797,6 +759,7 @@ public struct AdditionalMedia {
 public struct Downloader {
     @available(iOS 10.0, *)
     public static func download(mediaLocator: String, named name: String = UUID().uuidString, artwork artworkData: Data? = nil, using fairplayRequester: DownloadFairplayRequester? = nil) throws -> DownloadTask {
+        //"https://devimages.apple.com.edgekey.net/streaming/examples/bipbop_4x3/bipbop_4x3_variant.m3u8"
         guard let url = URL(string: mediaLocator) else {
             throw DownloadError.invalidMediaUrl(path: mediaLocator)
         }
