@@ -14,7 +14,7 @@ public enum DownloadError: Error {
     case storageUrlNotFound
     case completedWithError(error: Error)
     case failedToDeleteMedia(error: Error)
-    case canceledTaskFailedToDeleteLocalMedia
+    case failedToDeleteMediaUrlNotFound
     case downloadSessionInvalidated
     
     /// Unable to load a valid `URL` from path.

@@ -70,16 +70,20 @@ public final class DownloadTask {
     // Controls
     public func resume() {
         // AVAssetDownloadTask provides the ability to resume previously stopped downloads under certain circumstances. To do so, simply instantiate a new AVAssetDownloadTask with an AVURLAsset instantiated with a file NSURL pointing to the partially downloaded bundle with the desired download options, and the download will continue restoring any previously downloaded data. FPS keys remain encrypted in persisted form during this process.
-        
-        let options = requiredBitrate != nil ? [AVAssetDownloadTaskMinimumRequiredMediaBitrateKey: requiredBitrate!] : nil
-        
-        startTask(with: options) { error in
-            guard error == nil else {
-                onError(self, error!)
-                return
+        guard let task = task else {
+            let options = requiredBitrate != nil ? [AVAssetDownloadTaskMinimumRequiredMediaBitrateKey: requiredBitrate!] : nil
+            
+            startTask(with: options) { error in
+                guard error == nil else {
+                    onError(self, error!)
+                    return
+                }
+                onStarted(self)
             }
-            onStarted(self)
+            return
         }
+        task.resume()
+        onResumed(self)
     }
     
     /// NOTE: Can/will replacing the previous task cause problems? Investigate

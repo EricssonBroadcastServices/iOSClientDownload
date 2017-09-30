@@ -8,6 +8,11 @@
 
 import Foundation
 
+internal struct LocalMediaRecord {
+    let url: URL
+//    let
+}
+
 //public struct OfflineMediaAsset {
 //    /// Returns the download task if download is not complete
 //    public var downloadTask: DownloadTask? { }

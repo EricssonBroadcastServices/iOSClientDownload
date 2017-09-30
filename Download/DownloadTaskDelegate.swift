@@ -28,16 +28,19 @@ extension DownloadTaskDelegate {
                 case (NSURLErrorDomain, NSURLErrorCancelled):
                     // This task was canceled by user. URL was saved from
                     guard let location = downloadTask.configuration.destination else {
-                        downloadTask.onError(downloadTask, .canceledTaskFailedToDeleteLocalMedia)
+                        print("🚨 Failed to delete local media after user cancelled download: destination url not found")
+                        downloadTask.onError(downloadTask, .failedToDeleteMediaUrlNotFound)
                         return
                     }
                     
                     do {
                         try FileManager.default.removeItem(at: location)
                         downloadTask.configuration.destination = nil
+                        print("👍 Cleaned up local media after user cancellation of download")
                         downloadTask.onCanceled(downloadTask)
                     }
                     catch {
+                        print("🚨 Failed to clean local media after user cancelled download:",error.localizedDescription)
                         downloadTask.onError(downloadTask, .failedToDeleteMedia(error: error))
                     }
                 default:
@@ -120,7 +123,7 @@ extension DownloadTaskDelegate {
         // TODO: unfinished calculations for size and totalSize
         let progress = DownloadTask.Progress(size: -1,
                                              total: -1,
-                                             percentage: percentComplete * 100)
+                                             percentage: percentComplete)
         downloadTask.onProgress(downloadTask, progress)
     }
     
