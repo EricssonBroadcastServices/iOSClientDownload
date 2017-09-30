@@ -381,6 +381,24 @@ public final class DownloadTask {
         return self
     }
     
+    public enum State {
+        case notStarted
+        case running
+        case suspended
+        case canceling
+        case completed
+    }
+    
+    public var state: State {
+        guard let state = task?.state else { return .notStarted}
+        switch state {
+        case .running: return .running
+        case .suspended: return .suspended
+        case .canceling: return .canceling
+        case .completed: return .completed
+        }
+    }
+    
     // State
 //    public var currentProgress: Progress {
 //        ?????
