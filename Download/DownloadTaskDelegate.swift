@@ -105,6 +105,14 @@ extension DownloadTaskDelegate {
     internal func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didFinishDownloadingTo location: URL) {
         guard let downloadTask = downloadTask else { return }
         
+        do {
+            let size = try Int64(FileManager.default.allocatedSizeOfDirectory(atUrl: location))
+            let bytes = ByteCountFormatter.string(fromByteCount: size, countStyle: ByteCountFormatter.CountStyle.file)
+            print("TOTAL SIZE:",bytes)
+        }
+        catch {
+        }
+
         // This is the location to save
         // let locationToSave = location.relativePath
         downloadTask.configuration.destination = location
@@ -120,11 +128,9 @@ extension DownloadTaskDelegate {
             percentComplete += loadedTimeRange.duration.seconds / timeRangeExpectedToLoad.duration.seconds
         }
         
-        let currentSize = currentlyDownloadedSize()
-        let totalSize = currentSize > 0 ? (percentComplete > 0 ? Int64(Double(currentSize) / percentComplete) : 0) : currentSize
-        let progress = DownloadTask.Progress(size: currentSize,
-                                             total: totalSize,
-                                             current: percentComplete)
+//        let currentSize = currentlyDownloadedSize()
+//        let totalSize = currentSize > 0 ? (percentComplete > 0 ? Int64(Double(currentSize) / percentComplete) : 0) : currentSize
+        let progress = DownloadTask.Progress(current: percentComplete)
         downloadTask.onProgress(downloadTask, progress)
     }
     
@@ -135,15 +141,16 @@ extension DownloadTaskDelegate {
     }
 }
 
-extension DownloadTaskDelegate {
-    fileprivate func currentlyDownloadedSize() -> Int64 {
-        guard let destination = downloadTask?.configuration.destination else { return -1 }
-        
-        do {
-            return try Int64(FileManager.default.allocatedSizeOfDirectory(atUrl: destination))
-        }
-        catch {
-            return -1
-        }
-    }
-}
+//extension DownloadTaskDelegate {
+//    fileprivate func currentlyDownloadedSize() -> Int64 {
+//        guard let destination = downloadTask?.configuration.destination else { return -1 }
+//
+//        do {
+//            return try Int64(FileManager.default.allocatedSizeOfDirectory(atUrl: destination))
+//        }
+//        catch {
+//            return -1
+//        }
+//    }
+//}
+
