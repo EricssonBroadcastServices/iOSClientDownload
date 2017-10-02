@@ -43,6 +43,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		7672041A1F82CE14006D85B0 /* Cartfile.resolved */ = {isa = PBXFileReference; lastKnownFileType = text; path = Cartfile.resolved; sourceTree = SOURCE_ROOT; };
+		7672041B1F82CE14006D85B0 /* Cartfile.private */ = {isa = PBXFileReference; lastKnownFileType = text; path = Cartfile.private; sourceTree = SOURCE_ROOT; };
+		7672041C1F82CE14006D85B0 /* Cartfile */ = {isa = PBXFileReference; lastKnownFileType = text; path = Cartfile; sourceTree = SOURCE_ROOT; };
 		76782ED81F801CB9008878F6 /* DownloadTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadTask.swift; sourceTree = "<group>"; };
 		76782EDA1F801CC2008878F6 /* DownloadTaskDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadTaskDelegate.swift; sourceTree = "<group>"; };
 		76782EDC1F801CD0008878F6 /* SessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionManager.swift; sourceTree = "<group>"; };
@@ -116,6 +119,9 @@
 				76842FCA1F62977B00F1A0D3 /* README.md */,
 				76842FCB1F62977B00F1A0D3 /* UPGRADE_GUIDE.md */,
 				76842FD01F62979A00F1A0D3 /* fastlane */,
+				7672041C1F82CE14006D85B0 /* Cartfile */,
+				7672041B1F82CE14006D85B0 /* Cartfile.private */,
+				7672041A1F82CE14006D85B0 /* Cartfile.resolved */,
 				76842FB11F62969200F1A0D3 /* Download.h */,
 				76842FB21F62969200F1A0D3 /* Info.plist */,
 				76842FDA1F63DC3D00F1A0D3 /* Downloader.swift */,
