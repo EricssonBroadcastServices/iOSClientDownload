@@ -120,10 +120,11 @@ extension DownloadTaskDelegate {
             percentComplete += loadedTimeRange.duration.seconds / timeRangeExpectedToLoad.duration.seconds
         }
         
-        // TODO: unfinished calculations for size and totalSize
-        let progress = DownloadTask.Progress(size: -1,
-                                             total: -1,
-                                             percentage: percentComplete)
+        let currentSize = currentlyDownloadedSize()
+        let totalSize = currentSize > 0 ? (percentComplete > 0 ? Int64(Double(currentSize) / percentComplete) : 0) : currentSize
+        let progress = DownloadTask.Progress(size: currentSize,
+                                             total: totalSize,
+                                             current: percentComplete)
         downloadTask.onProgress(downloadTask, progress)
     }
     
@@ -131,5 +132,18 @@ extension DownloadTaskDelegate {
     internal func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didResolve resolvedMediaSelection: AVMediaSelection) {
         guard let downloadTask = downloadTask else { return }
         downloadTask.resolvedMediaSelection = resolvedMediaSelection
+    }
+}
+
+extension DownloadTaskDelegate {
+    fileprivate func currentlyDownloadedSize() -> Int64 {
+        guard let destination = downloadTask?.configuration.destination else { return -1 }
+        
+        do {
+            return try Int64(FileManager.default.allocatedSizeOfDirectory(atUrl: destination))
+        }
+        catch {
+            return -1
+        }
     }
 }

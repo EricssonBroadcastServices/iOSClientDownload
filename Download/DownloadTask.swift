@@ -17,8 +17,8 @@ public final class DownloadTask {
         /// Total size in bytes
         public let total: Int64
         
-        /// Percentage downloaded
-        public let percentage: Double
+        /// Current progress measured in [0,1]
+        public let current: Double
     }
     
     internal struct Configuration {
