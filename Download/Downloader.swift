@@ -81,6 +81,7 @@ extension Downloader {
     internal static var localMediaLog: LocalMediaLog? {
         do {
             let logFile = try logFileURL()
+            print("LOG FILE PATH: ",logFile)
             if !FileManager.default.fileExists(atPath: logFile.path) {
                 return LocalMediaLog(log: [])
             }
