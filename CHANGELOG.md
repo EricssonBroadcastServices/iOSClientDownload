@@ -8,3 +8,4 @@ NO RELEASE YET
 #### Features
 
 * `EMP-10327` Initial download functionality added.
+* `EMP-10445` Tracking functionality for locally downloaded asset.
