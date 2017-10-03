@@ -89,7 +89,7 @@ public final class DownloadTask {
     /// NOTE: Can/will replacing the previous task cause problems? Investigate
     internal func startTask(with options: [String: Any]?, callback: (DownloadError?) -> Void) {
         if #available(iOS 10.0, *) {
-            DispatchQueue(label: "org.alamofire.session." + UUID().uuidString).sync {
+            DispatchQueue(label: "com.emp.download.startTask." + UUID().uuidString).sync {
                 
                 guard let task = sessionManager
                     .session

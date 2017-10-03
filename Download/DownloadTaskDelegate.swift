@@ -18,9 +18,42 @@ internal class DownloadTaskDelegate: NSObject {
 }
 
 extension DownloadTaskDelegate {
+    fileprivate func storeLocalMediaRecord(task: DownloadTask, error: Error?) {
+        guard let destination = task.configuration.destination else { return }
+        
+        do {
+            let bookmark = try destination.bookmarkData()
+            let mediaRecord = LocalMediaRecord(urlBookmark: bookmark, assetId: task.configuration.name)
+            
+            if let error = error {
+                if let nsError = error as? NSError {
+                    switch (nsError.domain, nsError.code) {
+                    case (NSURLErrorDomain, NSURLErrorCancelled):
+                        // We should not store a record for deletion events
+                        return
+                    default:
+                        Downloader.save(localRecord: mediaRecord)
+                    }
+                }
+                else {
+                    Downloader.save(localRecord: mediaRecord)
+                }
+            }
+            else {
+                Downloader.save(localRecord: mediaRecord)
+            }
+        }
+        catch {
+            
+        }
+        
+    }
     internal func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         
         guard let downloadTask = downloadTask else { return }
+        
+        storeLocalMediaRecord(task: downloadTask, error: error)
+        
         if let error = error {
             // Error
             if let nsError = error as? NSError {
@@ -113,8 +146,7 @@ extension DownloadTaskDelegate {
         catch {
         }
 
-        // This is the location to save
-        // let locationToSave = location.relativePath
+        // This is the location to save as bookmark data
         downloadTask.configuration.destination = location
     }
     

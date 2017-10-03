@@ -30,6 +30,10 @@
 		76842FD91F62979A00F1A0D3 /* Fastfile in Resources */ = {isa = PBXBuildFile; fileRef = 76842FD51F62979A00F1A0D3 /* Fastfile */; };
 		76842FDB1F63DC3D00F1A0D3 /* Downloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76842FDA1F63DC3D00F1A0D3 /* Downloader.swift */; };
 		76AD6FA81F821F960084524A /* FileManager+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76AD6FA71F821F960084524A /* FileManager+Extensions.swift */; };
+		76F364A81F83C662003280AC /* Data+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F364A71F83C661003280AC /* Data+Extensions.swift */; };
+		76F364AA1F83C84B003280AC /* OfflineFairplayRequester.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F364A91F83C84B003280AC /* OfflineFairplayRequester.swift */; };
+		76F364AC1F83C874003280AC /* LocalMediaLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F364AB1F83C874003280AC /* LocalMediaLog.swift */; };
+		76F364AE1F83C8C6003280AC /* OfflineMediaAsset.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F364AD1F83C8C6003280AC /* OfflineMediaAsset.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -72,6 +76,10 @@
 		76842FD51F62979A00F1A0D3 /* Fastfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Fastfile; sourceTree = "<group>"; };
 		76842FDA1F63DC3D00F1A0D3 /* Downloader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Downloader.swift; sourceTree = "<group>"; };
 		76AD6FA71F821F960084524A /* FileManager+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FileManager+Extensions.swift"; sourceTree = "<group>"; };
+		76F364A71F83C661003280AC /* Data+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Data+Extensions.swift"; sourceTree = "<group>"; };
+		76F364A91F83C84B003280AC /* OfflineFairplayRequester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineFairplayRequester.swift; sourceTree = "<group>"; };
+		76F364AB1F83C874003280AC /* LocalMediaLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalMediaLog.swift; sourceTree = "<group>"; };
+		76F364AD1F83C8C6003280AC /* OfflineMediaAsset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineMediaAsset.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -131,11 +139,15 @@
 				76782EDE1F801CD9008878F6 /* SessionDelegate.swift */,
 				76782EE01F801D59008878F6 /* DownloadError.swift */,
 				76782EE21F801D71008878F6 /* DownloadFairplayRequester.swift */,
+				76F364A91F83C84B003280AC /* OfflineFairplayRequester.swift */,
 				76782EE41F801D90008878F6 /* DownloadEventPublisher.swift */,
+				76F364AD1F83C8C6003280AC /* OfflineMediaAsset.swift */,
 				76782EE61F801DA9008878F6 /* MediaOption.swift */,
 				76782EE81F801DC8008878F6 /* AdditionalMedia.swift */,
+				76F364AB1F83C874003280AC /* LocalMediaLog.swift */,
 				76782EEA1F801DF8008878F6 /* AVURLAsset+Extensions.swift */,
 				76AD6FA71F821F960084524A /* FileManager+Extensions.swift */,
+				76F364A71F83C661003280AC /* Data+Extensions.swift */,
 			);
 			path = Download;
 			sourceTree = "<group>";
@@ -285,21 +297,25 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				76F364AA1F83C84B003280AC /* OfflineFairplayRequester.swift in Sources */,
 				76782ED91F801CB9008878F6 /* DownloadTask.swift in Sources */,
 				76782EE71F801DA9008878F6 /* MediaOption.swift in Sources */,
 				76AD6FA81F821F960084524A /* FileManager+Extensions.swift in Sources */,
 				76842FCE1F62977B00F1A0D3 /* README.md in Sources */,
 				76782EEB1F801DF8008878F6 /* AVURLAsset+Extensions.swift in Sources */,
+				76F364A81F83C662003280AC /* Data+Extensions.swift in Sources */,
 				76842FCF1F62977B00F1A0D3 /* UPGRADE_GUIDE.md in Sources */,
 				76782EDB1F801CC2008878F6 /* DownloadTaskDelegate.swift in Sources */,
 				76782EE31F801D71008878F6 /* DownloadFairplayRequester.swift in Sources */,
 				76782EE51F801D90008878F6 /* DownloadEventPublisher.swift in Sources */,
 				76842FDB1F63DC3D00F1A0D3 /* Downloader.swift in Sources */,
 				76782EE11F801D59008878F6 /* DownloadError.swift in Sources */,
+				76F364AE1F83C8C6003280AC /* OfflineMediaAsset.swift in Sources */,
 				76842FCC1F62977B00F1A0D3 /* CHANGELOG.md in Sources */,
 				76782EE91F801DC8008878F6 /* AdditionalMedia.swift in Sources */,
 				76782EDD1F801CD0008878F6 /* SessionManager.swift in Sources */,
 				76782EDF1F801CD9008878F6 /* SessionDelegate.swift in Sources */,
+				76F364AC1F83C874003280AC /* LocalMediaLog.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
