@@ -23,7 +23,7 @@ extension DownloadTaskDelegate {
         
         do {
             let bookmark = try destination.bookmarkData()
-            let mediaRecord = LocalMediaRecord(urlBookmark: bookmark, assetId: task.configuration.name)
+            let mediaRecord = LocalMediaRecord(urlBookmark: bookmark, assetId: task.configuration.assetId)
             
             if let error = error {
                 if let nsError = error as? NSError {

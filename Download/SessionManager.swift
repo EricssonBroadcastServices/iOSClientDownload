@@ -72,9 +72,9 @@ public class SessionManager {
 
 extension SessionManager {
     @available(iOS 10.0, *)
-    public func download(mediaLocator: URL, named name: String? = nil, artwork artworkData: Data? = nil, using fairplayRequester: DownloadFairplayRequester? = nil) -> DownloadTask {
+    public func download(mediaLocator: URL, assetId: String, artwork artworkData: Data? = nil, using fairplayRequester: DownloadFairplayRequester? = nil) -> DownloadTask {
         let configuration = DownloadTask.Configuration(url: mediaLocator,
-                                                       name: name ?? UUID().uuidString,
+                                                       assetId: assetId,
                                                        artwork: artworkData,
                                                        destination: nil)
         
@@ -82,9 +82,9 @@ extension SessionManager {
     }
     
     @available(iOS, introduced: 9.0, deprecated: 10.0)
-    public func download(mediaLocator: URL, to destination: URL, using fairplayRequester: DownloadFairplayRequester? = nil) -> DownloadTask {
+    public func download(mediaLocator: URL, assetId: String, to destination: URL, using fairplayRequester: DownloadFairplayRequester? = nil) -> DownloadTask {
         let configuration = DownloadTask.Configuration(url: mediaLocator,
-                                                       name: UUID().uuidString,
+                                                       assetId: assetId,
                                                        artwork: nil,
                                                        destination: destination)
         

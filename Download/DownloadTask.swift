@@ -23,7 +23,7 @@ public final class DownloadTask {
     
     internal struct Configuration {
         let url: URL
-        let name: String
+        let assetId: String
         let artwork: Data?
         
         /// location.bookmarkData()
@@ -57,7 +57,7 @@ public final class DownloadTask {
         urlAsset = AVURLAsset(url: configuration.url)
         
         if fairplayRequester != nil {
-            urlAsset.resourceLoader.setDelegate(fairplayRequester, queue: DispatchQueue(label: configuration.name + "-offlineFairplayLoader"))
+            urlAsset.resourceLoader.setDelegate(fairplayRequester, queue: DispatchQueue(label: configuration.assetId + "-offlineFairplayLoader"))
         }
     }
     
@@ -79,7 +79,7 @@ public final class DownloadTask {
     // MARK: FairPlay
     public func fairplay(requester: DownloadFairplayRequester) -> DownloadTask {
         fairplayRequester = requester
-        urlAsset.resourceLoader.setDelegate(requester, queue: DispatchQueue(label: configuration.name + "-offlineFairplayLoader"))
+        urlAsset.resourceLoader.setDelegate(requester, queue: DispatchQueue(label: configuration.assetId + "-offlineFairplayLoader"))
         return self
     }
     
@@ -110,7 +110,7 @@ public final class DownloadTask {
                 guard let task = sessionManager
                     .session
                     .makeAssetDownloadTask(asset: urlAsset,
-                                           assetTitle: configuration.name,
+                                           assetTitle: configuration.assetId,
                                            assetArtworkData: configuration.artwork,
                                            options: options) else {
                                             // This method may return nil if the AVAssetDownloadURLSession has been invalidated.
@@ -118,7 +118,7 @@ public final class DownloadTask {
                                             return
                 }
                 self.task = task
-                task.taskDescription = configuration.name
+                task.taskDescription = configuration.assetId
                 
                 sessionManager.delegate[task] = self
                 
@@ -143,7 +143,7 @@ public final class DownloadTask {
             }
             
             self.task = task
-            task.taskDescription = configuration.name
+            task.taskDescription = configuration.assetId
             
             sessionManager.delegate[task] = self
             
