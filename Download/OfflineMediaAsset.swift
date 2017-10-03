@@ -71,11 +71,11 @@ public struct OfflineMediaAsset {
         do {
             try FileManager.default.removeItem(at: urlAsset.url)
             
-            // TODO: Remove LocalMediaRecord
+            Downloader.remove(localRecordId: assetId)
             print("👍 Cleaned up local media after user deleted OfflineMediaAsset")
         }
         catch {
-            
+            print("OfflineMediaAsset delete:",error.localizedDescription)
         }
     }
 }

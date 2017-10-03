@@ -90,4 +90,17 @@ extension SessionManager {
         
         return DownloadTask(sessionManager: self, configuration: configuration, fairplayRequester: fairplayRequester)
     }
+    
+//    internal func task(withId assetId: String) -> AVAssetDownloadTask? {
+//        var task: AVAssetDownloadTask?
+//        self.session
+//            .getAllTasks{ tasks in
+//                task = tasks
+//                    .flatMap{ $0 as? AVAssetDownloadTask }
+//                    .filter{ $0.taskDescription == assetId }
+//                    .first
+//                return
+//        }
+//        return task
+//    }
 }

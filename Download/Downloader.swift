@@ -101,6 +101,9 @@ extension Downloader {
         
         log.append(localRecord)
         let mediaLog = LocalMediaLog(log: log)
+        save(mediaLog: mediaLog)
+    }
+    private static func save(mediaLog: LocalMediaLog) {
         do {
             let logURL = try baseDirectory()
             
@@ -113,6 +116,13 @@ extension Downloader {
     }
     internal static var logFileName: String {
         return "localMediaLog"
+    }
+    internal static func remove(localRecordId: String) {
+        guard let log = localMediaLog?.log else { return }
+        
+        let newLog = log.filter{ $0.assetId != localRecordId }
+        let mediaLog = LocalMediaLog(log: newLog)
+        save(mediaLog: mediaLog)
     }
     
     internal static func logFileURL() throws -> URL {

@@ -48,6 +48,7 @@ public final class DownloadTask {
     fileprivate var task: AVAssetDownloadTask?
     fileprivate let sessionManager: SessionManager
     
+    /// New, fresh DownloadTasks
     internal init(sessionManager: SessionManager, configuration: Configuration, fairplayRequester: DownloadFairplayRequester? = nil) {
         self.sessionManager = sessionManager
         self.configuration = configuration
@@ -59,6 +60,21 @@ public final class DownloadTask {
             urlAsset.resourceLoader.setDelegate(fairplayRequester, queue: DispatchQueue(label: configuration.name + "-offlineFairplayLoader"))
         }
     }
+    
+//    /// Resumed from suspended session
+//    init(task: AVAssetDownloadTask, sessionManager: SessionManager, configuration: Configuration, fairplayRequester: DownloadFairplayRequester? = nil) {
+//        self.task = task
+//
+//        self.sessionManager = sessionManager
+//        self.configuration = configuration
+//        self.fairplayRequester = fairplayRequester
+//
+//        urlAsset = task.urlAsset
+//
+//        if fairplayRequester != nil {
+//            urlAsset.resourceLoader.setDelegate(fairplayRequester, queue: DispatchQueue(label: configuration.name + "-offlineFairplayLoader"))
+//        }
+//    }
     
     // MARK: FairPlay
     public func fairplay(requester: DownloadFairplayRequester) -> DownloadTask {
