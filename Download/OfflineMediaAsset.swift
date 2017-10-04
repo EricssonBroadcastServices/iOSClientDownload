@@ -12,20 +12,11 @@ import AVFoundation
 
 public struct OfflineMediaAsset {
     /// Returns the download task if download is not complete
-    public var downloadTask: AVAssetDownloadTask? {
-        var task: AVAssetDownloadTask?
-        let assetId = self.assetId
+    public func downloadTask(callback: @escaping (AVAssetDownloadTask?) -> Void) {
         SessionManager
             .default
-            .session
-            .getAllTasks{ tasks in
-                task = tasks
-                    .flatMap{ $0 as? AVAssetDownloadTask }
-                    .filter{ $0.taskDescription == assetId }
-                    .first
-                return
-        }
-        return task
+            .task(withId: self.assetId,
+                  callback: callback)
     }
     
     internal init(assetId: String, url: URL) {
@@ -36,27 +27,26 @@ public struct OfflineMediaAsset {
     internal let assetId: String
     internal let urlAsset: AVURLAsset
     
-    public var state: State {
+    public func state(callback: @escaping (State) -> Void) {
         if #available(iOS 10.0, *) {
-            print(urlAsset.url,urlAsset.assetCache?.isPlayableOffline)
+            print("PlayableOffline: ",urlAsset.url,urlAsset.assetCache?.isPlayableOffline)
             if let assetCache = urlAsset.assetCache, assetCache.isPlayableOffline {
-                return .completed
+                callback(.completed)
+                return
             }
         }
         
-        return stateFrom(task: downloadTask)
-    }
-    
-    fileprivate func stateFrom(task: AVAssetDownloadTask?) -> State {
-        if let task = task {
-            switch task.state {
-            case .completed: return .completed
-            case .suspended: return .inProgress
-            default: return .notFound
+        downloadTask{ task in
+            if let task = task {
+                switch task.state {
+                case .completed: return callback(.completed)
+                case .suspended: return callback(.inProgress)
+                default: return callback(.notFound)
+                }
             }
-        }
-        else {
-            return .notFound
+            else {
+                return callback(.notFound)
+            }
         }
     }
     
@@ -75,7 +65,7 @@ public struct OfflineMediaAsset {
             print("👍 Cleaned up local media after user deleted OfflineMediaAsset")
         }
         catch {
-            print("OfflineMediaAsset delete:",error.localizedDescription)
+            print("🚨 OfflineMediaAsset delete:",error.localizedDescription)
         }
     }
 }

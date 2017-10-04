@@ -92,19 +92,15 @@ extension SessionManager {
     }
     
     internal func task(withId assetId: String, callback: @escaping (AVAssetDownloadTask?) -> Void) {
-        var task: AVAssetDownloadTask?
         self.session
             .getAllTasks{ tasks in
-                task = tasks
+                let task = tasks
                     .flatMap{ $0 as? AVAssetDownloadTask }
                     .filter{ $0.taskDescription == assetId }
                     .first
-                if let task = task {
-                    callback(task)
-                }
-                else {
-                    callback(nil)
-                }
+                callback(task)
+                return
         }
+        callback(nil)
     }
 }
