@@ -47,6 +47,7 @@ public final class DownloadTask {
     
     fileprivate var task: AVAssetDownloadTask?
     fileprivate let sessionManager: SessionManager
+    internal var isResumable: Bool = false
     
     /// New, fresh DownloadTasks
     internal init(sessionManager: SessionManager, configuration: Configuration, fairplayRequester: DownloadFairplayRequester? = nil) {
@@ -61,20 +62,20 @@ public final class DownloadTask {
         }
     }
     
-//    /// Resumed from suspended session
-//    init(task: AVAssetDownloadTask, sessionManager: SessionManager, configuration: Configuration, fairplayRequester: DownloadFairplayRequester? = nil) {
-//        self.task = task
-//
-//        self.sessionManager = sessionManager
-//        self.configuration = configuration
-//        self.fairplayRequester = fairplayRequester
-//
-//        urlAsset = task.urlAsset
-//
-//        if fairplayRequester != nil {
-//            urlAsset.resourceLoader.setDelegate(fairplayRequester, queue: DispatchQueue(label: configuration.name + "-offlineFairplayLoader"))
-//        }
-//    }
+    /// Resumed from suspended session
+    init(task: AVAssetDownloadTask, sessionManager: SessionManager, configuration: Configuration, fairplayRequester: DownloadFairplayRequester? = nil) {
+        self.task = task
+
+        self.sessionManager = sessionManager
+        self.configuration = configuration
+        self.fairplayRequester = fairplayRequester
+
+        urlAsset = task.urlAsset
+
+        if fairplayRequester != nil {
+            urlAsset.resourceLoader.setDelegate(fairplayRequester, queue: DispatchQueue(label: configuration.assetId + "-offlineFairplayLoader"))
+        }
+    }
     
     // MARK: FairPlay
     public func fairplay(requester: DownloadFairplayRequester) -> DownloadTask {
@@ -128,7 +129,7 @@ public final class DownloadTask {
         }
         else {
             guard let destination = configuration.destination else {
-                onError(self, .storageUrlNotFound)
+                onError(self, .failedToStartTaskWithoutDestination)
                 return
             }
             
@@ -161,10 +162,11 @@ public final class DownloadTask {
         onSuspended(self)
     }
     
-    public func cancel() {
+    public func cancel(clearingData: Bool = false) {
         // Downloaded HLS assets can be deleted using [NSFileManager removeItemAtURL:] with the URL for the downloaded version of the asset. In addition, if a user deletes the app that downloaded the HLS assets, they will also delete all content that the app stored to disk.
         
         guard let task = self.task else { return }
+        isResumable = !clearingData
         task.cancel()
         
         // NOTE: `onCanceled` called once `didCompleteWithError` delegate methods is triggered
