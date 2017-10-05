@@ -21,6 +21,7 @@ public class SessionDelegate: NSObject {
     internal subscript(identifier: String) -> DownloadTask? {
         get {
             lock.lock() ; defer { lock.unlock() }
+            requests.forEach{ print("📍 Active DownloadTask \($0.value.configuration.assetId)") }
             return requests.filter{ $0.value.configuration.assetId == identifier }.first?.value
         }
 //        set {

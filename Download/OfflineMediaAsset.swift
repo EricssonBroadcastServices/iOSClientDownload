@@ -135,7 +135,7 @@ public struct OfflineMediaAsset {
 //                  callback: callback)
 //    }
     
-    internal init(assetId: String, url: URL?) {
+    public init(assetId: String, url: URL?) {
         self.assetId = assetId
         if let url = url {
             self.urlAsset = AVURLAsset(url: url)
@@ -156,22 +156,22 @@ public struct OfflineMediaAsset {
 //        return ResumedDownloadTask(assetId: assetId)
 //    }
     
-    public func isResumable(callback: @escaping (Bool) -> Void) {
-        SessionManager
-            .default
-            .task(assetId: assetId) { task in
-                
-                guard let task = task else {
-                    callback(false)
-                    return
-                }
-                switch task.state {
-                case .running: callback(true)
-                case .suspended: callback(true)
-                default: callback(false)
-                }
-        }
-    }
+//    public func isResumable(callback: @escaping (Bool) -> Void) {
+//        SessionManager
+//            .default
+//            .task(assetId: assetId) { task in
+//
+//                guard let task = task else {
+//                    callback(false)
+//                    return
+//                }
+//                switch task.state {
+//                case .running: callback(true)
+//                case .suspended: callback(true)
+//                default: callback(false)
+//                }
+//        }
+//    }
     
     public func state(callback: @escaping (State) -> Void) {
         guard let urlAsset = urlAsset else {
@@ -211,19 +211,4 @@ public struct OfflineMediaAsset {
         case completed
         case notPlayable
     }
-    
-    /// Deletes locally stored asset data
-//    public func delete() {
-//        do {
-//            if let url = urlAsset?.url {
-//                try FileManager.default.removeItem(at: url)
-//            }
-//
-//            Downloader.remove(localRecordId: assetId)
-//            print("👍 Cleaned up local media after user deleted OfflineMediaAsset")
-//        }
-//        catch {
-//            print("🚨 OfflineMediaAsset delete:",error.localizedDescription)
-//        }
-//    }
 }

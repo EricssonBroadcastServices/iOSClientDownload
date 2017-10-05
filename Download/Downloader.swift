@@ -89,25 +89,6 @@ public struct Downloader {
 //        }
 //    }
 //
-//    internal static var localMediaLog: LocalMediaLog? {
-//        do {
-//            let logFile = try logFileURL()
-//
-//            if !FileManager.default.fileExists(atPath: logFile.path) {
-//                return LocalMediaLog(log: [])
-//            }
-//            let data = try Data(contentsOf: logFile)
-//
-//            let localMedia = try JSONDecoder().decode(LocalMediaLog.self, from: data)
-//
-//            localMedia.log.forEach{ print("📎 Local media id: \($0.assetId)") }
-//            return localMedia
-//        }
-//        catch {
-//            print("localMediaLog failed",error.localizedDescription)
-//            return nil
-//        }
-//    }
 //
 //    /// This method will ensure `LocalMediaLog` has a unique list of downloads with respect to `assetId`
 //    internal static func save(localRecord: LocalMediaRecord) {
