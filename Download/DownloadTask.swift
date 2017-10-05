@@ -68,7 +68,7 @@ public final class DownloadTask {
             
             startTask(with: options) { error in
                 guard error == nil else {
-                    onError(self, error!)
+                    onError(self, configuration.destination, error!)
                     return
                 }
                 onStarted(self)
@@ -114,7 +114,7 @@ public final class DownloadTask {
             }
             else {
                 guard let destination = configuration.destination else {
-                    onError(self, .failedToStartTaskWithoutDestination)
+                    onError(self, configuration.destination, .failedToStartTaskWithoutDestination)
                     return
                 }
                 guard let task = sessionManager

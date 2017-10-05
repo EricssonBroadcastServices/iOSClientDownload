@@ -31,20 +31,12 @@ extension DownloadTaskDelegate {
             // Completed with success
             guard let location = downloadTask.configuration.destination else {
                 // Error when no storage url is found
-                
-                print("✅ DownloadTask completed. 🚨 ", DownloadError.bookmark(reason: .storageUrlNotFound).localizedDescription)
-                downloadTask.onError(downloadTask, .bookmark(reason: .storageUrlNotFound))
+                print("✅ DownloadTask completed. 🚨 ", DownloadError.completedWithoutValidStorageUrl.localizedDescription)
+                downloadTask.onError(downloadTask, downloadTask.configuration.destination, .completedWithoutValidStorageUrl)
                 return
             }
             
-//            // Store the bookmark data
-//            saveBookmark(assetId: downloadTask.configuration.assetId, withCompletedDataAt: location) { bookmarkError in
-//                if let bookmarkError = bookmarkError {
-//                    print("✅ DownloadTask completed. 🚨 Unable to store bookmark data: \(bookmarkError)")
-//                    downloadTask.onError(downloadTask, bookmarkError)
-//                }
-//                else {
-                    // Success
+            // Success
             guard let resolvedMedia = downloadTask.resolvedMediaSelection else {
                 // 1. No more media available. Trigger onCompleted
                 print("✅ DownloadTask completed. 💾 Bookmark data stored.")
@@ -65,7 +57,7 @@ extension DownloadTaskDelegate {
                 downloadTask.startTask(with: options) { [weak self] error in
                     guard let updatedTask = self?.downloadTask else { return }
                     guard error == nil else {
-                        updatedTask.onError(updatedTask, error!)
+                        updatedTask.onError(updatedTask, updatedTask.configuration.url, error!)
                         return
                     }
                     updatedTask.onDownloadingMediaOption(updatedTask, newSelection)
@@ -76,8 +68,6 @@ extension DownloadTaskDelegate {
                 print("✅ DownloadTask completed. 💾 Bookmark data stored.")
                 downloadTask.onCompleted(downloadTask, location)
             }
-//                }
-//            }
         }
     }
     
@@ -87,29 +77,29 @@ extension DownloadTaskDelegate {
         }
         else {
             print("🚨 DownloadTask completed with error:",error.localizedDescription)
-            downloadTask.onError(downloadTask, .completedWithError(error: error))
+            downloadTask.onError(downloadTask, downloadTask.configuration.destination, .completedWithError(error: error))
         }
     }
     
     private func handleCancellation(task: DownloadTask) {
         guard let destination = task.configuration.destination else {
-            print("🚨 DownloadTask cancelled. ⚠️ ", DownloadError.failedToDeleteMediaUrlNotFound.localizedDescription)
-            task.onError(task, .failedToDeleteMediaUrlNotFound)
+            print("🚨 DownloadTask cancelled. ⚠️ ", DownloadError.noStoragePathOnCancel.localizedDescription)
+            task.onError(task, task.configuration.destination, .noStoragePathOnCancel)
             return
         }
         
-        do {
-            try FileManager.default.removeItem(at: destination)
+//        do {
+//            try FileManager.default.removeItem(at: destination)
 //            Downloader.remove(localRecordId: task.configuration.assetId)
             
             task.configuration.destination = nil
             print("✅ DownloadTask cancelled. 👍 Cleaned up local media.")
-            task.onCanceled(task)
-        }
-        catch {
-            print("🚨 DownloadTask cancelled. ⚠️ Failed to clean local media after user cancelled download:",error.localizedDescription)
-            task.onError(task, .failedToDeleteMedia(error: error))
-        }
+            task.onCanceled(task, destination)
+//        }
+//        catch {
+//            print("🚨 DownloadTask cancelled. ⚠️ Failed to clean local media after user cancelled download:",error.localizedDescription)
+//            task.onError(task, .failedToDeleteMedia(error: error))
+//        }
     }
     
 //    internal func saveBookmark(assetId: String, withCompletedDataAt destination: URL?, callback: (DownloadError?) -> Void) {
