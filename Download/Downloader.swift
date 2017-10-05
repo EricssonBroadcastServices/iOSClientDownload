@@ -104,11 +104,25 @@ extension Downloader {
             return nil
         }
     }
+    
+    /// This method will ensure `LocalMediaLog` has a unique list of downloads with respect to `assetId`
     internal static func save(localRecord: LocalMediaRecord) {
-        guard var log = localMediaLog?.log else { return }
+        guard let currentLog = localMediaLog?.log else { return }
         
-        log.append(localRecord)
-        let mediaLog = LocalMediaLog(log: log)
+        // Delte any currently stored OfflineMediaAssets with `localRecord.assetId as they are considered "duplicate"
+        var filteredLog = currentLog
+            .filter{ record -> Bool in
+                if record.assetId == localRecord.assetId {
+                    resolve(mediaRecord: record)?.delete()
+                    return false
+                }
+                else {
+                    return true
+                }
+        }
+        
+        filteredLog.append(localRecord)
+        let mediaLog = LocalMediaLog(log: filteredLog)
         save(mediaLog: mediaLog)
     }
     
@@ -123,9 +137,11 @@ extension Downloader {
             print("save(localRecord:) failed",error.localizedDescription)
         }
     }
+    
     internal static var logFileName: String {
         return "localMediaLog"
     }
+    
     internal static func remove(localRecordId: String) {
         guard let log = localMediaLog?.log else { return }
         
