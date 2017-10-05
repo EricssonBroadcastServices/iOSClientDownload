@@ -88,7 +88,7 @@ extension Downloader {
     internal static var localMediaLog: LocalMediaLog? {
         do {
             let logFile = try logFileURL()
-            print("LOG FILE PATH: ",logFile)
+            
             if !FileManager.default.fileExists(atPath: logFile.path) {
                 return LocalMediaLog(log: [])
             }
@@ -96,6 +96,7 @@ extension Downloader {
             
             let localMedia = try JSONDecoder().decode(LocalMediaLog.self, from: data)
             
+            localMedia.log.forEach{ print("📎 Local media id: \($0.assetId)") }
             return localMedia
         }
         catch {
@@ -110,6 +111,7 @@ extension Downloader {
         let mediaLog = LocalMediaLog(log: log)
         save(mediaLog: mediaLog)
     }
+    
     private static func save(mediaLog: LocalMediaLog) {
         do {
             let logURL = try baseDirectory()

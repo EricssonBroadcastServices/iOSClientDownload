@@ -15,7 +15,7 @@ public struct OfflineMediaAsset {
     public func downloadTask(callback: @escaping (AVAssetDownloadTask?) -> Void) {
         SessionManager
             .default
-            .task(withId: self.assetId,
+            .task(assetId: self.assetId,
                   callback: callback)
     }
     

@@ -10,8 +10,8 @@ import Foundation
 import AVFoundation
 
 public class SessionManager {
-    internal static let defaultSessionConfiguration = URLSessionConfiguration.background(withIdentifier: "empTest")
-    internal static let `default` = SessionManager()//(configuration: SessionManager.defaultSessionConfiguration)
+    internal static let defaultSessionConfiguration = URLSessionConfiguration.background(withIdentifier: "com.emp.download.session.background"+UUID().uuidString)
+    internal static let `default` = SessionManager()
     
     /// The underlying session.
     internal let session: AVAssetDownloadURLSession
@@ -59,7 +59,7 @@ public class SessionManager {
     }
     
     deinit {
-        session.invalidateAndCancel()
+        session.finishTasksAndInvalidate()
     }
     
     
@@ -91,16 +91,16 @@ extension SessionManager {
         return DownloadTask(sessionManager: self, configuration: configuration, fairplayRequester: fairplayRequester)
     }
     
-    internal func task(withId assetId: String, callback: @escaping (AVAssetDownloadTask?) -> Void) {
+    internal func task(assetId: String, callback: @escaping (AVAssetDownloadTask?) -> Void) {
         self.session
             .getAllTasks{ tasks in
+                tasks.forEach{ print("📌 \($0.taskDescription)") }
                 let task = tasks
                     .flatMap{ $0 as? AVAssetDownloadTask }
-                    .filter{ $0.taskDescription == assetId }
+                    .filter{ $0.taskDescription == assetId } // TODO: .filter{ $0.taskDescription == configuration.assetId && $0.urlAsset.url == configuration.url } ?
                     .first
                 callback(task)
                 return
         }
-        callback(nil)
     }
 }

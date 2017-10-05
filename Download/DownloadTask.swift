@@ -37,65 +37,55 @@ public final class DownloadTask {
     ///  During the initial asset download, the user’s default media selections—their primary audio and video tracks—are downloaded. If additional media selections such as subtitles, closed captions, or alternative audio tracks are found, the session delegate’s URLSession:assetDownloadTask:didResolveMediaSelection: method is called, indicating that additional media selections exist on the server. To download additional media selections, save a reference to this resolved AVMediaSelection object so you can create subsequent download tasks to be executed serially.
     internal var resolvedMediaSelection: AVMediaSelection?
     
-    internal let urlAsset: AVURLAsset
+    fileprivate var task: AVAssetDownloadTask?
     internal var configuration: Configuration
     fileprivate var fairplayRequester: DownloadFairplayRequester?
+    fileprivate let sessionManager: SessionManager
+    
+    internal var urlAsset: AVURLAsset? {
+        return task?.urlAsset
+    }
     
     internal lazy var delegate: DownloadTaskDelegate = { [unowned self] in
         return DownloadTaskDelegate(task: self)
         }()
     
-    fileprivate var task: AVAssetDownloadTask?
-    fileprivate let sessionManager: SessionManager
-    internal var isResumable: Bool = false
     
     /// New, fresh DownloadTasks
     internal init(sessionManager: SessionManager, configuration: Configuration, fairplayRequester: DownloadFairplayRequester? = nil) {
         self.sessionManager = sessionManager
         self.configuration = configuration
         self.fairplayRequester = fairplayRequester
-        
-        urlAsset = AVURLAsset(url: configuration.url)
-        
-        if fairplayRequester != nil {
-            urlAsset.resourceLoader.setDelegate(fairplayRequester, queue: DispatchQueue(label: configuration.assetId + "-offlineFairplayLoader"))
-        }
-    }
-    
-    /// Resumed from suspended session
-    init(task: AVAssetDownloadTask, sessionManager: SessionManager, configuration: Configuration, fairplayRequester: DownloadFairplayRequester? = nil) {
-        self.task = task
-
-        self.sessionManager = sessionManager
-        self.configuration = configuration
-        self.fairplayRequester = fairplayRequester
-
-        urlAsset = task.urlAsset
-
-        if fairplayRequester != nil {
-            urlAsset.resourceLoader.setDelegate(fairplayRequester, queue: DispatchQueue(label: configuration.assetId + "-offlineFairplayLoader"))
-        }
-    }
-    
-    // MARK: FairPlay
-    public func fairplay(requester: DownloadFairplayRequester) -> DownloadTask {
-        fairplayRequester = requester
-        urlAsset.resourceLoader.setDelegate(requester, queue: DispatchQueue(label: configuration.assetId + "-offlineFairplayLoader"))
-        return self
     }
     
     // Controls
     public func resume() {
         // AVAssetDownloadTask provides the ability to resume previously stopped downloads under certain circumstances. To do so, simply instantiate a new AVAssetDownloadTask with an AVURLAsset instantiated with a file NSURL pointing to the partially downloaded bundle with the desired download options, and the download will continue restoring any previously downloaded data. FPS keys remain encrypted in persisted form during this process.
         guard let task = task else {
-            let options = requiredBitrate != nil ? [AVAssetDownloadTaskMinimumRequiredMediaBitrateKey: requiredBitrate!] : nil
-            
-            startTask(with: options) { error in
-                guard error == nil else {
-                    onError(self, error!)
-                    return
+            sessionManager.task(assetId: configuration.assetId) { [weak self] retrievedTask in
+                guard let weakSelf = self else { return }
+                
+                DispatchQueue(label: "com.emp.download.startTask." + UUID().uuidString).sync {
+                    if let retrievedTask = retrievedTask {
+                        print("♻️ Found previous DownloadTask associated with request for: \(weakSelf.configuration.assetId)")
+                        
+                        weakSelf.finalizePreparation(of: retrievedTask)
+                        weakSelf.onStarted(weakSelf)
+                    }
+                    else {
+                        print("✅ Creating new DownloadTask for: \(weakSelf.configuration.assetId)")
+                        // Create a fresh task
+                        let options = weakSelf.requiredBitrate != nil ? [AVAssetDownloadTaskMinimumRequiredMediaBitrateKey: weakSelf.requiredBitrate!] : nil
+                        
+                        weakSelf.startTask(with: options) { error in
+                            guard error == nil else {
+                                weakSelf.onError(weakSelf, error!)
+                                return
+                            }
+                            weakSelf.onStarted(weakSelf)
+                        }
+                    }
                 }
-                onStarted(self)
             }
             return
         }
@@ -103,14 +93,11 @@ public final class DownloadTask {
         onResumed(self)
     }
     
-    /// NOTE: Can/will replacing the previous task cause problems? Investigate
     internal func startTask(with options: [String: Any]?, callback: (DownloadError?) -> Void) {
-        if #available(iOS 10.0, *) {
-            DispatchQueue(label: "com.emp.download.startTask." + UUID().uuidString).sync {
-                
+            if #available(iOS 10.0, *) {
                 guard let task = sessionManager
                     .session
-                    .makeAssetDownloadTask(asset: urlAsset,
+                    .makeAssetDownloadTask(asset: AVURLAsset(url: configuration.url),
                                            assetTitle: configuration.assetId,
                                            assetArtworkData: configuration.artwork,
                                            options: options) else {
@@ -118,41 +105,52 @@ public final class DownloadTask {
                                             callback(.downloadSessionInvalidated)
                                             return
                 }
-                self.task = task
                 task.taskDescription = configuration.assetId
                 
-                sessionManager.delegate[task] = self
+                finalizePreparation(of: task)
                 
-                task.resume()
                 callback(nil)
             }
-        }
-        else {
-            guard let destination = configuration.destination else {
-                onError(self, .failedToStartTaskWithoutDestination)
-                return
+            else {
+                guard let destination = configuration.destination else {
+                    onError(self, .failedToStartTaskWithoutDestination)
+                    return
+                }
+                guard let task = sessionManager
+                    .session
+                    .makeAssetDownloadTask(asset: AVURLAsset(url: configuration.url),
+                                           destinationURL: destination,
+                                           options: options) else {
+                                            // This method may return nil if the URLSession has been invalidated
+                                            callback(.downloadSessionInvalidated)
+                                            return
+                }
+                task.taskDescription = configuration.assetId
+                
+                finalizePreparation(of: task)
+                
+                callback(nil)
             }
-            
-            guard let task = sessionManager
-                .session
-                .makeAssetDownloadTask(asset: urlAsset,
-                                       destinationURL: destination,
-                                       options: options) else {
-                                        // This method may return nil if the URLSession has been invalidated
-                                        callback(.downloadSessionInvalidated)
-                                        return
-            }
-            
-            self.task = task
-            task.taskDescription = configuration.assetId
-            
-            sessionManager.delegate[task] = self
-            
-            task.resume()
-            callback(nil)
-        }
     }
     
+    private func finalizePreparation(of task: AVAssetDownloadTask) {
+        self.task = task
+        
+        if fairplayRequester != nil {
+            if task.urlAsset.resourceLoader.delegate != nil {
+                task.urlAsset.resourceLoader.setDelegate(nil, queue: nil)
+            }
+            let queue = DispatchQueue(label: configuration.assetId + "-offlineFairplayLoader")
+            
+            task.urlAsset
+                .resourceLoader
+                .setDelegate(fairplayRequester, queue: queue)
+        }
+        
+        sessionManager.delegate[task] = self
+        
+        task.resume()
+    }
     
     public func suspend() {
         // If a download has been started, it can be stopped. AVAssetDownloadTask inherits from NSURLSessionTask, and downloads can be suspended or cancelled using the corresponding methods inherited from NSURLSessionTask. In the case where a download is stopped and there is no intention of resuming it, apps are responsible for deleting the portion of the asset already downloaded to a user’s device. The NSURLSessionTask documentation on developer.apple.com contains more details about this process.
@@ -162,11 +160,10 @@ public final class DownloadTask {
         onSuspended(self)
     }
     
-    public func cancel(clearingData: Bool = false) {
+    public func cancel() {
         // Downloaded HLS assets can be deleted using [NSFileManager removeItemAtURL:] with the URL for the downloaded version of the asset. In addition, if a user deletes the app that downloaded the HLS assets, they will also delete all content that the app stored to disk.
         
         guard let task = self.task else { return }
-        isResumable = !clearingData
         task.cancel()
         
         // NOTE: `onCanceled` called once `didCompleteWithError` delegate methods is triggered
@@ -224,19 +221,19 @@ extension DownloadTask {
     /// Returns currently downloaded subtitles
     @available(iOS 10.0, *)
     public var localSubtitles: [MediaOption] {
-        return urlAsset.localSubtitles
+        return urlAsset?.localSubtitles ?? []
     }
     
     /// Returns currently downloaded subtitles
     @available(iOS 10.0, *)
     public var localAudio: [MediaOption] {
-        return urlAsset.localAudio
+        return urlAsset?.localAudio ?? []
     }
     
     /// Returns currently downloaded subtitles
     @available(iOS 10.0, *)
     public var localVideo: [MediaOption] {
-        return urlAsset.localVideo
+        return urlAsset?.localVideo ?? []
     }
 }
 

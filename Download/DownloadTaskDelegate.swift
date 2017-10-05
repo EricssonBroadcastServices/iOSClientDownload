@@ -19,7 +19,10 @@ internal class DownloadTaskDelegate: NSObject {
 
 extension DownloadTaskDelegate {
     internal func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        guard let downloadTask = downloadTask else { return }
+        guard let downloadTask = downloadTask else {
+            return
+            
+        }
         
         if let error = error {
             // Completed with error
@@ -29,6 +32,8 @@ extension DownloadTaskDelegate {
             // Completed with success
             guard let location = downloadTask.configuration.destination else {
                 // Error when no storage url is found
+                
+                print("✅ DownloadTask completed. 🚨 ", DownloadError.bookmark(reason: .storageUrlNotFound).localizedDescription)
                 downloadTask.onError(downloadTask, .bookmark(reason: .storageUrlNotFound))
                 return
             }
@@ -36,18 +41,20 @@ extension DownloadTaskDelegate {
             // Store the bookmark data
             saveBookmark(assetId: downloadTask.configuration.assetId, url: location) { bookmarkError in
                 if let bookmarkError = bookmarkError {
+                    print("✅ DownloadTask completed. 🚨 Unable to store bookmark data: \(bookmarkError)")
                     downloadTask.onError(downloadTask, bookmarkError)
                 }
                 else {
                     // Success
                     guard let resolvedMedia = downloadTask.resolvedMediaSelection else {
                         // 1. No more media available. Trigger onCompleted
+                        print("✅ DownloadTask completed. 💾 Bookmark data stored.")
                         downloadTask.onCompleted(downloadTask, location)
                         return
                     }
                     
                     // 2. Ask, by callback, if and which additional AVMediaSelectionOption's should be included
-                    if let newSelection = downloadTask.onShouldDownloadMediaOption(downloadTask, AdditionalMedia(asset: downloadTask.urlAsset)) {
+                    if let urlAsset = downloadTask.urlAsset, let newSelection = downloadTask.onShouldDownloadMediaOption(downloadTask, AdditionalMedia(asset: urlAsset)) {
                         
                         // 2.1 User indicated additional media is requested
                         let currentMediaOption = resolvedMedia.mutableCopy() as! AVMutableMediaSelection
@@ -67,6 +74,7 @@ extension DownloadTaskDelegate {
                     }
                     else {
                         // 2.2 No additional media was requested
+                        print("✅ DownloadTask completed. 💾 Bookmark data stored.")
                         downloadTask.onCompleted(downloadTask, location)
                     }
                 }
@@ -79,58 +87,29 @@ extension DownloadTaskDelegate {
             handleCancellation(task: downloadTask)
         }
         else {
-            guard let destination = downloadTask.configuration.destination else {
-                downloadTask.onError(downloadTask, .bookmark(reason: .storageUrlNotFound))
-                return
-            }
-            saveBookmark(assetId: downloadTask.configuration.assetId, url: destination) { bookmarkError in
-                // We purposefully ignore bookmark related errors here as the onCompletionError takes precedence. TODO: Is this really wise?
-                if let bookmarkError = bookmarkError {
-                    print("🚨 DownloadTask completed with error. ⚠️ Unable to store bookmark data: \(bookmarkError)")
-                }
-                else {
-                    print("🚨 DownloadTask completed with error. 💾 Bookmark data stored.")
-                }
-                
-                downloadTask.onError(downloadTask, .completedWithError(error: error))
-            }
+            print("🚨 DownloadTask completed with error:",error.localizedDescription)
+            downloadTask.onError(downloadTask, .completedWithError(error: error))
         }
     }
     
     private func handleCancellation(task: DownloadTask) {
         guard let destination = task.configuration.destination else {
-            task.onError(task, .bookmark(reason: .storageUrlNotFound))
+            print("🚨 DownloadTask cancelled. ⚠️ ", DownloadError.failedToDeleteMediaUrlNotFound.localizedDescription)
+            task.onError(task, .failedToDeleteMediaUrlNotFound)
             return
         }
         
-        if task.isResumable {
-            // Keep media and make a bookmark
-            saveBookmark(assetId: task.configuration.assetId, url: destination) { error in
-                if let error = error {
-                    print("🚨 DownloadTask cancelled. ⚠️ Unable to store bookmark data.")
-                    task.onError(task, error)
-                }
-                else {
-                    print("✅ DownloadTask cancelled. 💾 Bookmark data stored.")
-                    task.onCanceled(task)
-                }
-            }
+        do {
+            try FileManager.default.removeItem(at: destination)
+            Downloader.remove(localRecordId: task.configuration.assetId)
+            
+            task.configuration.destination = nil
+            print("✅ DownloadTask cancelled. 👍 Cleaned up local media.")
+            task.onCanceled(task)
         }
-        else {
-            // Remove local media
-            do {
-                try FileManager.default.removeItem(at: destination)
-                Downloader.remove(localRecordId: task.configuration.assetId)
-                
-                task.configuration.destination = nil
-                print("✅ DownloadTask cancelled. 👍 Cleaned up local media.")
-                task.onCanceled(task)
-            }
-            catch {
-                print("🚨 DownloadTask cancelled. ⚠️ Failed to clean local media after user cancelled download:",error.localizedDescription)
-                task.onError(task, .failedToDeleteMedia(error: error))
-            }
-
+        catch {
+            print("🚨 DownloadTask cancelled. ⚠️ Failed to clean local media after user cancelled download:",error.localizedDescription)
+            task.onError(task, .failedToDeleteMedia(error: error))
         }
     }
     
@@ -156,13 +135,13 @@ extension DownloadTaskDelegate {
     internal func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didFinishDownloadingTo location: URL) {
         print("didFinishDownloadingTo",location)
         
-        guard let downloadTask = downloadTask else { return }
-        
         if let size = try? Int64(FileManager.default.allocatedSizeOfDirectory(atUrl: location)) {
             let bytes = ByteCountFormatter.string(fromByteCount: size, countStyle: ByteCountFormatter.CountStyle.file)
-            print("📥 DownloadTask finished. \(bytes) on disk")
+            print("📥 DownloadTask finished. \(bytes) on disk at \(location)")
         }
-
+        
+        guard let downloadTask = downloadTask else { return }
+        
         // This is the location to save as bookmark data
         downloadTask.configuration.destination = location
     }

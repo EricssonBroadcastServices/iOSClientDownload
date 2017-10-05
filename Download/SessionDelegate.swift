@@ -112,7 +112,7 @@ extension SessionDelegate: URLSessionTaskDelegate {
 
 extension SessionDelegate: URLSessionDelegate {
     public func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
-        
+        print("🎈 urlSession(:didBecomeInvalidWithError;)")
     }
     
     public func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
@@ -120,6 +120,6 @@ extension SessionDelegate: URLSessionDelegate {
     }
     
     public func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
-        
+        print("🎈 urlSessionDidFinishEvents(forBackgroundURLSession:)")
     }
 }
