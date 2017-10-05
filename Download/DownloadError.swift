@@ -21,6 +21,7 @@ public enum DownloadError: Error {
     case invalidMediaUrl(path: String)
     
     case bookmark(reason: BookmarkDataFailure)
+    
 }
 
 extension DownloadError {

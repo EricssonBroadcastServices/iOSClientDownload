@@ -21,7 +21,6 @@ extension DownloadTaskDelegate {
     internal func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         guard let downloadTask = downloadTask else {
             return
-            
         }
         
         if let error = error {
@@ -39,7 +38,7 @@ extension DownloadTaskDelegate {
             }
             
             // Store the bookmark data
-            saveBookmark(assetId: downloadTask.configuration.assetId, url: location) { bookmarkError in
+            saveBookmark(assetId: downloadTask.configuration.assetId, withCompletedDataAt: location) { bookmarkError in
                 if let bookmarkError = bookmarkError {
                     print("✅ DownloadTask completed. 🚨 Unable to store bookmark data: \(bookmarkError)")
                     downloadTask.onError(downloadTask, bookmarkError)
@@ -113,10 +112,9 @@ extension DownloadTaskDelegate {
         }
     }
     
-    private func saveBookmark(assetId: String, url destination: URL, callback: (DownloadError?) -> Void) {
+    internal func saveBookmark(assetId: String, withCompletedDataAt destination: URL?, callback: (DownloadError?) -> Void) {
         do {
-            let bookmark = try destination.bookmarkData()
-            let mediaRecord = LocalMediaRecord(urlBookmark: bookmark, assetId: assetId)
+            let mediaRecord = try LocalMediaRecord(assetId: assetId, completedAt: destination)
             Downloader.save(localRecord: mediaRecord)
             callback(nil)
         }

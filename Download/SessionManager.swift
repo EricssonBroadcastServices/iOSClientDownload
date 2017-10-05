@@ -78,7 +78,12 @@ extension SessionManager {
                                                        artwork: artworkData,
                                                        destination: nil)
         
-        return DownloadTask(sessionManager: self, configuration: configuration, fairplayRequester: fairplayRequester)
+        if let currentTask = delegate[assetId] {
+            return currentTask
+        }
+        else {
+            return DownloadTask(sessionManager: self, configuration: configuration, fairplayRequester: fairplayRequester)
+        }
     }
     
     @available(iOS, introduced: 9.0, deprecated: 10.0)
@@ -88,7 +93,12 @@ extension SessionManager {
                                                        artwork: nil,
                                                        destination: destination)
         
-        return DownloadTask(sessionManager: self, configuration: configuration, fairplayRequester: fairplayRequester)
+        if let currentTask = delegate[assetId] {
+            return currentTask
+        }
+        else {
+            return DownloadTask(sessionManager: self, configuration: configuration, fairplayRequester: fairplayRequester)
+        }
     }
     
     internal func task(assetId: String, callback: @escaping (AVAssetDownloadTask?) -> Void) {

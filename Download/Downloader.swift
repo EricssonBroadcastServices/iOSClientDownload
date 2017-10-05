@@ -53,7 +53,7 @@ public struct Downloader {
 }
 
 extension Downloader {
-    public static func offline(assetId: String) -> OfflineMediaAsset? {
+    public static func offlineMedia(assetId: String) -> OfflineMediaAsset? {
         return offlineAssets()
             .filter{ $0.assetId == assetId }
             .first
@@ -64,20 +64,24 @@ extension Downloader {
     }
     
     private static func resolve(mediaRecord: LocalMediaRecord) -> OfflineMediaAsset? {
-        
         var bookmarkDataIsStale = false
         do {
-            guard let url = try URL(resolvingBookmarkData: mediaRecord.urlBookmark, bookmarkDataIsStale: &bookmarkDataIsStale) else {
-                // TODO: Mark this LocalMediaRecord as unavailable, schedule for removal
-                return nil
+            if let urlBookmark = mediaRecord.urlBookmark {
+                guard let url = try URL(resolvingBookmarkData: urlBookmark, bookmarkDataIsStale: &bookmarkDataIsStale) else {
+                    // TODO: Mark this LocalMediaRecord as unavailable, schedule for removal
+                    return nil
+                }
+                
+                guard !bookmarkDataIsStale else {
+                    // TODO: Mark bookmark data as stale, schedule removal of LocalMediaRecord
+                    return nil
+                }
+                
+                return OfflineMediaAsset(assetId: mediaRecord.assetId, url: url)
             }
-            
-            guard !bookmarkDataIsStale else {
-                // TODO: Mark bookmark data as stale, schedule removal of LocalMediaRecord
-                return nil
+            else {
+                return OfflineMediaAsset(assetId: mediaRecord.assetId, url: nil)
             }
-            
-            return OfflineMediaAsset(assetId: mediaRecord.assetId, url: url)
         }
         catch {
             // TODO: An error occured. Do we schedule removal?

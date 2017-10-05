@@ -18,6 +18,17 @@ public class SessionDelegate: NSObject {
     private let lock = NSLock()
     
     /// Access the task delegate for the specified task in a thread-safe manner.
+    internal subscript(identifier: String) -> DownloadTask? {
+        get {
+            lock.lock() ; defer { lock.unlock() }
+            return requests.filter{ $0.value.configuration.assetId == identifier }.first?.value
+        }
+//        set {
+//            lock.lock() ; defer { lock.unlock() }
+//            requests[identifier] = newValue
+//        }
+    }
+    
     internal subscript(task: AVAssetDownloadTask) -> DownloadTask? {
         get {
             lock.lock() ; defer { lock.unlock() }
@@ -106,6 +117,8 @@ extension SessionDelegate: URLSessionTaskDelegate {
         
         if let delegate = self[assetDownloadTask]?.delegate {
             delegate.urlSession(session, task: task, didCompleteWithError: error)
+            
+            self[assetDownloadTask] = nil
         }
     }
 }

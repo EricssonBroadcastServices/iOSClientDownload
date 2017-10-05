@@ -62,36 +62,37 @@ public final class DownloadTask {
     public func resume() {
         // AVAssetDownloadTask provides the ability to resume previously stopped downloads under certain circumstances. To do so, simply instantiate a new AVAssetDownloadTask with an AVURLAsset instantiated with a file NSURL pointing to the partially downloaded bundle with the desired download options, and the download will continue restoring any previously downloaded data. FPS keys remain encrypted in persisted form during this process.
         guard let task = task else {
-            sessionManager.task(assetId: configuration.assetId) { [weak self] retrievedTask in
-                guard let weakSelf = self else { return }
-                
-                DispatchQueue(label: "com.emp.download.startTask." + UUID().uuidString).sync {
-                    if let retrievedTask = retrievedTask {
-                        print("♻️ Found previous DownloadTask associated with request for: \(weakSelf.configuration.assetId)")
-                        
-                        weakSelf.finalizePreparation(of: retrievedTask)
-                        weakSelf.onStarted(weakSelf)
-                    }
-                    else {
-                        print("✅ Creating new DownloadTask for: \(weakSelf.configuration.assetId)")
-                        // Create a fresh task
-                        let options = weakSelf.requiredBitrate != nil ? [AVAssetDownloadTaskMinimumRequiredMediaBitrateKey: weakSelf.requiredBitrate!] : nil
-                        
-                        weakSelf.startTask(with: options) { error in
-                            guard error == nil else {
-                                weakSelf.onError(weakSelf, error!)
-                                return
-                            }
-                            weakSelf.onStarted(weakSelf)
-                        }
-                    }
+            print("✅ Creating new DownloadTask for: \(configuration.assetId)")
+            // Create a fresh task
+            let options = requiredBitrate != nil ? [AVAssetDownloadTaskMinimumRequiredMediaBitrateKey: requiredBitrate!] : nil
+            
+            startTask(with: options) { error in
+                guard error == nil else {
+                    onError(self, error!)
+                    return
                 }
+                onStarted(self)
             }
             return
         }
         task.resume()
         onResumed(self)
     }
+    
+//    internal func createResumeTask() {
+//        sessionManager.task(assetId: configuration.assetId) { [weak self] retrievedTask in
+//            guard let weakSelf = self else { return }
+//
+//            DispatchQueue(label: "com.emp.download.startTask." + UUID().uuidString).sync {
+//                if let retrievedTask = retrievedTask {
+//                    print("♻️ Found previous DownloadTask associated with request for: \(weakSelf.configuration.assetId)")
+//
+//                    weakSelf.finalizePreparation(of: retrievedTask)
+//                    weakSelf.onStarted(weakSelf)
+//                }
+//            }
+//        }
+//    }
     
     internal func startTask(with options: [String: Any]?, callback: (DownloadError?) -> Void) {
             if #available(iOS 10.0, *) {
@@ -136,20 +137,27 @@ public final class DownloadTask {
     private func finalizePreparation(of task: AVAssetDownloadTask) {
         self.task = task
         
-        if fairplayRequester != nil {
-            if task.urlAsset.resourceLoader.delegate != nil {
-                task.urlAsset.resourceLoader.setDelegate(nil, queue: nil)
+        delegate.saveBookmark(assetId: configuration.assetId, withCompletedDataAt: nil) { bookmarkError in
+            guard bookmarkError == nil else {
+                onError(self, bookmarkError!)
+                return
             }
-            let queue = DispatchQueue(label: configuration.assetId + "-offlineFairplayLoader")
             
-            task.urlAsset
-                .resourceLoader
-                .setDelegate(fairplayRequester, queue: queue)
+            if fairplayRequester != nil {
+                if task.urlAsset.resourceLoader.delegate != nil {
+                    task.urlAsset.resourceLoader.setDelegate(nil, queue: nil)
+                }
+                let queue = DispatchQueue(label: configuration.assetId + "-offlineFairplayLoader")
+                
+                task.urlAsset
+                    .resourceLoader
+                    .setDelegate(fairplayRequester, queue: queue)
+            }
+            
+            sessionManager.delegate[task] = self
+            
+            task.resume()
         }
-        
-        sessionManager.delegate[task] = self
-        
-        task.resume()
     }
     
     public func suspend() {
@@ -190,7 +198,7 @@ public final class DownloadTask {
     }
     
     public var state: State {
-        guard let state = task?.state else { return .notStarted}
+        guard let state = task?.state else { return .notStarted }
         switch state {
         case .running: return .running
         case .suspended: return .suspended
