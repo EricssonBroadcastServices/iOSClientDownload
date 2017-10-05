@@ -136,13 +136,13 @@ public final class DownloadTask {
     
     private func finalizePreparation(of task: AVAssetDownloadTask) {
         self.task = task
-        
-        delegate.saveBookmark(assetId: configuration.assetId, withCompletedDataAt: nil) { bookmarkError in
-            guard bookmarkError == nil else {
-                onError(self, bookmarkError!)
-                return
-            }
-            
+//
+//        delegate.saveBookmark(assetId: configuration.assetId, withCompletedDataAt: nil) { bookmarkError in
+//            guard bookmarkError == nil else {
+//                onError(self, bookmarkError!)
+//                return
+//            }
+//
             if fairplayRequester != nil {
                 if task.urlAsset.resourceLoader.delegate != nil {
                     task.urlAsset.resourceLoader.setDelegate(nil, queue: nil)
@@ -157,7 +157,7 @@ public final class DownloadTask {
             sessionManager.delegate[task] = self
             
             task.resume()
-        }
+//        }
     }
     
     public func suspend() {
@@ -216,10 +216,10 @@ public final class DownloadTask {
     internal var onStarted: (DownloadTask) -> Void = { _ in }
     internal var onSuspended: (DownloadTask) -> Void = { _ in }
     internal var onResumed: (DownloadTask) -> Void = { _ in }
-    internal var onCanceled: (DownloadTask) -> Void = { _ in }
+    internal var onCanceled: (DownloadTask, URL) -> Void = { _ in }
     internal var onCompleted: (DownloadTask, URL) -> Void = { _ in }
     internal var onProgress: (DownloadTask, Progress) -> Void = { _ in }
-    internal var onError: (DownloadTask, DownloadError) -> Void = { _ in }
+    internal var onError: (DownloadTask, URL?, DownloadError) -> Void = { _ in }
     internal var onPlaybackReady: (DownloadTask, URL) -> Void = { _ in }
     internal var onShouldDownloadMediaOption: ((DownloadTask, AdditionalMedia) -> MediaOption?) = { _ in return nil }
     internal var onDownloadingMediaOption: (DownloadTask, MediaOption) -> Void = { _ in }
@@ -268,7 +268,7 @@ extension DownloadTask: DownloadEventPublisher {
     }
     
     @discardableResult
-    public func onCanceled(callback: @escaping (DownloadTask) -> Void) -> DownloadTask {
+    public func onCanceled(callback: @escaping (DownloadTask, URL) -> Void) -> DownloadTask {
         onCanceled = callback
         return self
     }
@@ -286,7 +286,7 @@ extension DownloadTask: DownloadEventPublisher {
     }
     
     @discardableResult
-    public func onError(callback: @escaping (DownloadTask, DownloadError) -> Void) -> DownloadTask {
+    public func onError(callback: @escaping (DownloadTask, URL?, DownloadError) -> Void) -> DownloadTask {
         onError = callback
         return self
     }

@@ -37,47 +37,47 @@ extension DownloadTaskDelegate {
                 return
             }
             
-            // Store the bookmark data
-            saveBookmark(assetId: downloadTask.configuration.assetId, withCompletedDataAt: location) { bookmarkError in
-                if let bookmarkError = bookmarkError {
-                    print("✅ DownloadTask completed. 🚨 Unable to store bookmark data: \(bookmarkError)")
-                    downloadTask.onError(downloadTask, bookmarkError)
-                }
-                else {
+//            // Store the bookmark data
+//            saveBookmark(assetId: downloadTask.configuration.assetId, withCompletedDataAt: location) { bookmarkError in
+//                if let bookmarkError = bookmarkError {
+//                    print("✅ DownloadTask completed. 🚨 Unable to store bookmark data: \(bookmarkError)")
+//                    downloadTask.onError(downloadTask, bookmarkError)
+//                }
+//                else {
                     // Success
-                    guard let resolvedMedia = downloadTask.resolvedMediaSelection else {
-                        // 1. No more media available. Trigger onCompleted
-                        print("✅ DownloadTask completed. 💾 Bookmark data stored.")
-                        downloadTask.onCompleted(downloadTask, location)
+            guard let resolvedMedia = downloadTask.resolvedMediaSelection else {
+                // 1. No more media available. Trigger onCompleted
+                print("✅ DownloadTask completed. 💾 Bookmark data stored.")
+                downloadTask.onCompleted(downloadTask, location)
+                return
+            }
+            
+            // 2. Ask, by callback, if and which additional AVMediaSelectionOption's should be included
+            if let urlAsset = downloadTask.urlAsset, let newSelection = downloadTask.onShouldDownloadMediaOption(downloadTask, AdditionalMedia(asset: urlAsset)) {
+                
+                // 2.1 User indicated additional media is requested
+                let currentMediaOption = resolvedMedia.mutableCopy() as! AVMutableMediaSelection
+                
+                currentMediaOption.select(newSelection.option, in: newSelection.group)
+                
+                let options = [AVAssetDownloadTaskMediaSelectionKey: currentMediaOption]
+                
+                downloadTask.startTask(with: options) { [weak self] error in
+                    guard let updatedTask = self?.downloadTask else { return }
+                    guard error == nil else {
+                        updatedTask.onError(updatedTask, error!)
                         return
                     }
-                    
-                    // 2. Ask, by callback, if and which additional AVMediaSelectionOption's should be included
-                    if let urlAsset = downloadTask.urlAsset, let newSelection = downloadTask.onShouldDownloadMediaOption(downloadTask, AdditionalMedia(asset: urlAsset)) {
-                        
-                        // 2.1 User indicated additional media is requested
-                        let currentMediaOption = resolvedMedia.mutableCopy() as! AVMutableMediaSelection
-                        
-                        currentMediaOption.select(newSelection.option, in: newSelection.group)
-                        
-                        let options = [AVAssetDownloadTaskMediaSelectionKey: currentMediaOption]
-                        
-                        downloadTask.startTask(with: options) { [weak self] error in
-                            guard let updatedTask = self?.downloadTask else { return }
-                            guard error == nil else {
-                                updatedTask.onError(updatedTask, error!)
-                                return
-                            }
-                            updatedTask.onDownloadingMediaOption(updatedTask, newSelection)
-                        }
-                    }
-                    else {
-                        // 2.2 No additional media was requested
-                        print("✅ DownloadTask completed. 💾 Bookmark data stored.")
-                        downloadTask.onCompleted(downloadTask, location)
-                    }
+                    updatedTask.onDownloadingMediaOption(updatedTask, newSelection)
                 }
             }
+            else {
+                // 2.2 No additional media was requested
+                print("✅ DownloadTask completed. 💾 Bookmark data stored.")
+                downloadTask.onCompleted(downloadTask, location)
+            }
+//                }
+//            }
         }
     }
     
@@ -100,7 +100,7 @@ extension DownloadTaskDelegate {
         
         do {
             try FileManager.default.removeItem(at: destination)
-            Downloader.remove(localRecordId: task.configuration.assetId)
+//            Downloader.remove(localRecordId: task.configuration.assetId)
             
             task.configuration.destination = nil
             print("✅ DownloadTask cancelled. 👍 Cleaned up local media.")
@@ -112,16 +112,16 @@ extension DownloadTaskDelegate {
         }
     }
     
-    internal func saveBookmark(assetId: String, withCompletedDataAt destination: URL?, callback: (DownloadError?) -> Void) {
-        do {
-            let mediaRecord = try LocalMediaRecord(assetId: assetId, completedAt: destination)
-            Downloader.save(localRecord: mediaRecord)
-            callback(nil)
-        }
-        catch {
-            callback(.bookmark(reason: .failedToProduceBookmark(error: error)))
-        }
-    }
+//    internal func saveBookmark(assetId: String, withCompletedDataAt destination: URL?, callback: (DownloadError?) -> Void) {
+//        do {
+//            let mediaRecord = try LocalMediaRecord(assetId: assetId, completedAt: destination)
+//            Downloader.save(localRecord: mediaRecord)
+//            callback(nil)
+//        }
+//        catch {
+//            callback(.bookmark(reason: .failedToProduceBookmark(error: error)))
+//        }
+//    }
 }
 
 extension DownloadTaskDelegate {

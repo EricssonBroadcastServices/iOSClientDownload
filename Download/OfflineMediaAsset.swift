@@ -213,17 +213,17 @@ public struct OfflineMediaAsset {
     }
     
     /// Deletes locally stored asset data
-    public func delete() {
-        do {
-            if let url = urlAsset?.url {
-                try FileManager.default.removeItem(at: url)
-            }
-            
-            Downloader.remove(localRecordId: assetId)
-            print("👍 Cleaned up local media after user deleted OfflineMediaAsset")
-        }
-        catch {
-            print("🚨 OfflineMediaAsset delete:",error.localizedDescription)
-        }
-    }
+//    public func delete() {
+//        do {
+//            if let url = urlAsset?.url {
+//                try FileManager.default.removeItem(at: url)
+//            }
+//
+//            Downloader.remove(localRecordId: assetId)
+//            print("👍 Cleaned up local media after user deleted OfflineMediaAsset")
+//        }
+//        catch {
+//            print("🚨 OfflineMediaAsset delete:",error.localizedDescription)
+//        }
+//    }
 }

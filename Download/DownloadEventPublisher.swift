@@ -18,13 +18,13 @@ public protocol DownloadEventPublisher {
     
     func onResumed(callback: @escaping (Self) -> Void) -> Self
     
-    func onCanceled(callback: @escaping (Self) -> Void) -> Self
+    func onCanceled(callback: @escaping (Self, URL) -> Void) -> Self
     
     func onCompleted(callback: @escaping (Self, URL) -> Void) -> Self
     
     func onProgress(callback: @escaping (Self, DownloadEventProgress) -> Void) -> Self
     
-    func onError(callback: @escaping (Self, DownloadEventError) -> Void) -> Self
+    func onError(callback: @escaping (Self, URL?, DownloadEventError) -> Void) -> Self
     
     func onPlaybackReady(callback: @escaping (Self, URL) -> Void) -> Self
     
