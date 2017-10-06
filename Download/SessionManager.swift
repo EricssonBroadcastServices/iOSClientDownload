@@ -102,16 +102,38 @@ extension SessionManager {
         }
     }
     
-//    public func task(assetId: String, callback: @escaping (AVAssetDownloadTask?) -> Void) {
-//        self.session
-//            .getAllTasks{ tasks in
-//                tasks.forEach{ print("📌 \($0.taskDescription)") }
-//                let task = tasks
-//                    .flatMap{ $0 as? AVAssetDownloadTask }
-//                    .filter{ $0.taskDescription == assetId } // TODO: .filter{ $0.taskDescription == configuration.assetId && $0.urlAsset.url == configuration.url } ?
-//                    .first
-//                callback(task)
-//                return
-//        }
-//    }
+    
+    public func restore(assigningRequesterFor: @escaping (String) -> DownloadFairplayRequester?, callback: @escaping ([DownloadTask]) -> Void) {
+        print("🛏 Restoring DownloadTasks...")
+        self.session
+            .getAllTasks{ [weak self] tasks in
+                let downloadTasks = tasks
+                    .flatMap{ task -> DownloadTask? in
+                        guard let weakSelf = self else {
+                            return nil
+                        }
+                        
+                        guard let assetTask = task as? AVAssetDownloadTask else {
+                            print("❌ Ignoring \(task.taskDescription). Task is not an AVAssetDownloadTask. ")
+                            return nil
+                        }
+                        
+                        guard let assetId = assetTask.taskDescription else {
+                            print("❌ Ignoring AVAssetDownloadTask without a unique assetId.")
+                            return nil
+                        }
+                        print("♻️ Found AVAssetDownloadTask \(assetId)")
+                        let configuration = DownloadTask.Configuration(url: assetTask.urlAsset.url,
+                                                                       assetId: assetId,
+                                                                       artwork: nil,
+                                                                       destination: nil)
+                        let requester = assigningRequesterFor(assetId)
+                        return DownloadTask(restoredTask: assetTask,
+                                            sessionManager: weakSelf,
+                                            configuration: configuration,
+                                            fairplayRequester: requester)
+                    }
+                callback(downloadTasks)
+        }
+    }
 }

@@ -58,6 +58,13 @@ public final class DownloadTask {
         self.fairplayRequester = fairplayRequester
     }
     
+    internal init(restoredTask: AVAssetDownloadTask, sessionManager: SessionManager, configuration: Configuration, fairplayRequester: DownloadFairplayRequester? = nil) {
+        self.task = restoredTask
+        self.sessionManager = sessionManager
+        self.configuration = configuration
+        self.fairplayRequester = fairplayRequester
+    }
+    
     // Controls
     public func resume() {
         // AVAssetDownloadTask provides the ability to resume previously stopped downloads under certain circumstances. To do so, simply instantiate a new AVAssetDownloadTask with an AVURLAsset instantiated with a file NSURL pointing to the partially downloaded bundle with the desired download options, and the download will continue restoring any previously downloaded data. FPS keys remain encrypted in persisted form during this process.
@@ -69,7 +76,7 @@ public final class DownloadTask {
         onResumed(self)
     }
     
-    public func prepare() {
+    public func prepare() { // TODO: Possibly remove this
         if task != nil {
             print("⚠️ Prepare called on DownloadTask with an attached AVAssetDownloadTask")
             print("👍 DownloadTask prepared")
@@ -186,6 +193,9 @@ public final class DownloadTask {
         onSuspended(self)
     }
     
+    /// NOTE: Canceling a download in progress will trigger `assetDownloadTask:didFinishDownloadingTo`. That `URL` can be used to "resume" the download at a later time.
+    ///
+    /// TODO: Probably a good idea to 
     public func cancel() {
         // Downloaded HLS assets can be deleted using [NSFileManager removeItemAtURL:] with the URL for the downloaded version of the asset. In addition, if a user deletes the app that downloaded the HLS assets, they will also delete all content that the app stored to disk.
         

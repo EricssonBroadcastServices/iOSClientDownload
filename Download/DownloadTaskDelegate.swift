@@ -87,31 +87,10 @@ extension DownloadTaskDelegate {
             task.onError(task, task.configuration.destination, .noStoragePathOnCancel)
             return
         }
-        
-//        do {
-//            try FileManager.default.removeItem(at: destination)
-//            Downloader.remove(localRecordId: task.configuration.assetId)
-            
-            task.configuration.destination = nil
-            print("✅ DownloadTask cancelled. 👍 Cleaned up local media.")
-            task.onCanceled(task, destination)
-//        }
-//        catch {
-//            print("🚨 DownloadTask cancelled. ⚠️ Failed to clean local media after user cancelled download:",error.localizedDescription)
-//            task.onError(task, .failedToDeleteMedia(error: error))
-//        }
+        task.configuration.destination = nil
+        print("✅ DownloadTask cancelled. 👍 Cleaned up local media.")
+        task.onCanceled(task, destination)
     }
-    
-//    internal func saveBookmark(assetId: String, withCompletedDataAt destination: URL?, callback: (DownloadError?) -> Void) {
-//        do {
-//            let mediaRecord = try LocalMediaRecord(assetId: assetId, completedAt: destination)
-//            Downloader.save(localRecord: mediaRecord)
-//            callback(nil)
-//        }
-//        catch {
-//            callback(.bookmark(reason: .failedToProduceBookmark(error: error)))
-//        }
-//    }
 }
 
 extension DownloadTaskDelegate {
