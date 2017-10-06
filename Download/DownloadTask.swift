@@ -62,36 +62,49 @@ public final class DownloadTask {
     public func resume() {
         // AVAssetDownloadTask provides the ability to resume previously stopped downloads under certain circumstances. To do so, simply instantiate a new AVAssetDownloadTask with an AVURLAsset instantiated with a file NSURL pointing to the partially downloaded bundle with the desired download options, and the download will continue restoring any previously downloaded data. FPS keys remain encrypted in persisted form during this process.
         guard let task = task else {
-            restoreSuspendedTask(for: configuration) { [weak self] success in
-                guard let weakSelf = self else { return }
-                if !success {
-                    weakSelf.createNewTask(with: weakSelf.configuration)
-                }
-            }
+            print("⚠️ Resume called on DownloadTask in preparation")
             return
         }
         task.resume()
         onResumed(self)
     }
     
-    private func restoreSuspendedTask(for configuration: Configuration, callback: @escaping (Bool) -> Void) {
-        print("♻️ Attempting to restore previous DownloadTask for: \(configuration.assetId)")
-        sessionManager.task(assetId: configuration.assetId) { [weak self] task in
-            guard let weakSelf = self else {
-                return
-            }
-            guard let task = task else {
-                print("⚠️ No DownloadTask to restore for: \(weakSelf.configuration.assetId)")
-                callback(false)
-                return
-            }
-            print("♻️ Restored DownloadTask associated with request for: \(weakSelf.configuration.assetId)")
+    public func prepare() {
+        if task != nil {
+            print("⚠️ Prepare called on DownloadTask with an attached AVAssetDownloadTask")
+            print("👍 DownloadTask prepared")
+            onPrepared(self)
             
-            weakSelf.finalizePreparation(of: task)
-            
-            weakSelf.onStarted(weakSelf)
+            if autoStart {
+                resume()
+            }
+            return
         }
+//        restoreSuspendedTask(for: configuration) { [weak self] success in
+//            guard let weakSelf = self else { return }
+//            if !success {
+//                weakSelf.createNewTask(with: weakSelf.configuration)
+//            }
+//        }
+        createNewTask(with: configuration)
     }
+    
+//    private func restoreSuspendedTask(for configuration: Configuration, callback: @escaping (Bool) -> Void) {
+//        print("♻️ Attempting to restore previous DownloadTask for: \(configuration.assetId)")
+//        sessionManager.task(assetId: configuration.assetId) { [weak self] task in
+//            guard let weakSelf = self else {
+//                return
+//            }
+//            guard let task = task else {
+//                print("⚠️ No DownloadTask to restore for: \(weakSelf.configuration.assetId)")
+//                callback(false)
+//                return
+//            }
+//            print("♻️ Restored DownloadTask associated with request for: \(weakSelf.configuration.assetId)")
+//            
+//            weakSelf.finalizePreparation(of: task)
+//        }
+//    }
     
     private func createNewTask(with configuration: Configuration) {
         print("✅ Creating new DownloadTask for: \(configuration.assetId)")
@@ -99,11 +112,10 @@ public final class DownloadTask {
         let options = requiredBitrate != nil ? [AVAssetDownloadTaskMinimumRequiredMediaBitrateKey: requiredBitrate!] : nil
         
         startTask(with: options) { error in
-            guard error == nil else {
-                onError(self, configuration.destination, error!)
+            if let error = error {
+                onError(self, configuration.destination, error)
                 return
             }
-            onStarted(self)
         }
     }
     
@@ -158,7 +170,12 @@ public final class DownloadTask {
         
         sessionManager.delegate[task] = self
         
-        task.resume()
+        print("👍 DownloadTask prepared")
+        onPrepared(self)
+        
+        if autoStart {
+            resume()
+        }
     }
     
     public func suspend() {
@@ -173,7 +190,17 @@ public final class DownloadTask {
         // Downloaded HLS assets can be deleted using [NSFileManager removeItemAtURL:] with the URL for the downloaded version of the asset. In addition, if a user deletes the app that downloaded the HLS assets, they will also delete all content that the app stored to disk.
         
         guard let task = self.task else { return }
+        if case .suspended = task.state {
+            task.resume()
+        }
         task.cancel()
+//        switch task.state {
+//        case .suspended:
+//            task.resume()
+//            task.cancel()
+//        default:
+//            task.cancel()
+//        }
         
         // NOTE: `onCanceled` called once `didCompleteWithError` delegate methods is triggered
     }
@@ -185,8 +212,15 @@ public final class DownloadTask {
     ///
     /// - parameter bitrate: The bitrate to select, in bps (bits per second)
     @discardableResult
-    public func use(bitrate: Int64?) -> Self {
+    public func use(bitrate: Int64?) -> DownloadTask {
         requiredBitrate = bitrate
+        return self
+    }
+    
+    fileprivate var autoStart: Bool = true
+    @discardableResult
+    public func should(autoStart: Bool = true) -> DownloadTask {
+        self.autoStart = autoStart
         return self
     }
     
@@ -214,6 +248,7 @@ public final class DownloadTask {
     //    }
     
     // MARK: DownloadEventPublisher
+    internal var onPrepared: (DownloadTask) -> Void = { _ in }
     internal var onStarted: (DownloadTask) -> Void = { _ in }
     internal var onSuspended: (DownloadTask) -> Void = { _ in }
     internal var onResumed: (DownloadTask) -> Void = { _ in }
@@ -249,6 +284,12 @@ extension DownloadTask {
 extension DownloadTask: DownloadEventPublisher {
     public typealias DownloadEventProgress = Progress
     public typealias DownloadEventError = DownloadError
+    
+    @discardableResult
+    public func onPrepared(callback: @escaping (DownloadTask) -> Void) -> DownloadTask {
+        onPrepared = callback
+        return self
+    }
     
     @discardableResult
     public func onStarted(callback: @escaping (DownloadTask) -> Void) -> DownloadTask {

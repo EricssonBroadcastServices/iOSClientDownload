@@ -52,7 +52,6 @@ public class SessionManager {
         self.session = AVAssetDownloadURLSession(configuration: configuration,
                                                  assetDownloadDelegate: delegate,
                                                  delegateQueue: OperationQueue.main)
-        session.configuration.identifier
         
         delegate.sessionDidFinishEventsForBackgroundURLSession = { [weak self] session in
             guard let strongSelf = self else { return }
@@ -103,16 +102,16 @@ extension SessionManager {
         }
     }
     
-    internal func task(assetId: String, callback: @escaping (AVAssetDownloadTask?) -> Void) {
-        self.session
-            .getAllTasks{ tasks in
-                tasks.forEach{ print("📌 \($0.taskDescription)") }
-                let task = tasks
-                    .flatMap{ $0 as? AVAssetDownloadTask }
-                    .filter{ $0.taskDescription == assetId } // TODO: .filter{ $0.taskDescription == configuration.assetId && $0.urlAsset.url == configuration.url } ?
-                    .first
-                callback(task)
-                return
-        }
-    }
+//    public func task(assetId: String, callback: @escaping (AVAssetDownloadTask?) -> Void) {
+//        self.session
+//            .getAllTasks{ tasks in
+//                tasks.forEach{ print("📌 \($0.taskDescription)") }
+//                let task = tasks
+//                    .flatMap{ $0 as? AVAssetDownloadTask }
+//                    .filter{ $0.taskDescription == assetId } // TODO: .filter{ $0.taskDescription == configuration.assetId && $0.urlAsset.url == configuration.url } ?
+//                    .first
+//                callback(task)
+//                return
+//        }
+//    }
 }
