@@ -10,8 +10,9 @@ import Foundation
 import AVFoundation
 
 public class SessionManager {
-    internal static let defaultSessionConfiguration = URLSessionConfiguration.background(withIdentifier: "com.emp.download.session.background"+UUID().uuidString)
-    internal static let `default` = SessionManager()
+    public static let defaultSessionConfigurationIdentifier = "com.emp.download.session.background"
+    internal static let defaultSessionConfiguration = URLSessionConfiguration.background(withIdentifier: defaultSessionConfigurationIdentifier)
+    public static let `default` = SessionManager()
     
     /// The underlying session.
     internal let session: AVAssetDownloadURLSession
@@ -29,7 +30,7 @@ public class SessionManager {
     /// SessionDelegate `sessionDidFinishEventsForBackgroundURLSession` and manually call the handler when finished.
     ///
     /// `nil` by default.
-    open var backgroundCompletionHandler: (() -> Void)?
+    public var backgroundCompletionHandler: (() -> Void)?
     
     // MARK: - Lifecycle
     
@@ -43,7 +44,7 @@ public class SessionManager {
     ///                                       challenges. `nil` by default.
     ///
     /// - returns: The new `SessionManager` instance.
-    public init(
+    internal init(
         configuration: URLSessionConfiguration = SessionManager.defaultSessionConfiguration,
         delegate: SessionDelegate = SessionDelegate())
     {
@@ -51,6 +52,7 @@ public class SessionManager {
         self.session = AVAssetDownloadURLSession(configuration: configuration,
                                                  assetDownloadDelegate: delegate,
                                                  delegateQueue: OperationQueue.main)
+        session.configuration.identifier
         
         delegate.sessionDidFinishEventsForBackgroundURLSession = { [weak self] session in
             guard let strongSelf = self else { return }

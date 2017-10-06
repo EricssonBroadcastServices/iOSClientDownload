@@ -147,6 +147,7 @@ extension DownloadTaskDelegate {
 //        let currentSize = currentlyDownloadedSize()
 //        let totalSize = currentSize > 0 ? (percentComplete > 0 ? Int64(Double(currentSize) / percentComplete) : 0) : currentSize
         let progress = DownloadTask.Progress(current: percentComplete)
+        print("📥 DownloadTask progress: \(progress.current*100) %")
         downloadTask.onProgress(downloadTask, progress)
     }
     

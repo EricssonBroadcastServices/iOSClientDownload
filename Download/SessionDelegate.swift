@@ -126,7 +126,7 @@ extension SessionDelegate: URLSessionTaskDelegate {
 
 extension SessionDelegate: URLSessionDelegate {
     public func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
-        print("🎈 urlSession(:didBecomeInvalidWithError;)")
+        print("🚨 URLSession invalidated: \(error?.localizedDescription)")
     }
     
     public func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
@@ -134,6 +134,13 @@ extension SessionDelegate: URLSessionDelegate {
     }
     
     public func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
-        print("🎈 urlSessionDidFinishEvents(forBackgroundURLSession:)")
+        print("🛏 URLSession finished background events")
+        session.getAllTasks{ tasks in
+            tasks.forEach{
+                let task = $0 as! AVAssetDownloadTask
+                print("📌 \(task.taskDescription) - \(task.urlAsset.url)")
+                
+            }
+        }
     }
 }
