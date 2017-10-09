@@ -123,8 +123,6 @@ extension DownloadTaskDelegate {
             percentComplete += loadedTimeRange.duration.seconds / timeRangeExpectedToLoad.duration.seconds
         }
         
-//        let currentSize = currentlyDownloadedSize()
-//        let totalSize = currentSize > 0 ? (percentComplete > 0 ? Int64(Double(currentSize) / percentComplete) : 0) : currentSize
         let progress = DownloadTask.Progress(current: percentComplete)
         print("📥 DownloadTask progress: \(progress.current*100) %")
         downloadTask.onProgress(downloadTask, progress)
@@ -136,17 +134,3 @@ extension DownloadTaskDelegate {
         downloadTask.resolvedMediaSelection = resolvedMediaSelection
     }
 }
-
-//extension DownloadTaskDelegate {
-//    fileprivate func currentlyDownloadedSize() -> Int64 {
-//        guard let destination = downloadTask?.configuration.destination else { return -1 }
-//
-//        do {
-//            return try Int64(FileManager.default.allocatedSizeOfDirectory(atUrl: destination))
-//        }
-//        catch {
-//            return -1
-//        }
-//    }
-//}
-

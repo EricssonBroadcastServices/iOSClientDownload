@@ -11,12 +11,6 @@ import AVFoundation
 
 public final class DownloadTask {
     public struct Progress {
-//        /// Size in bytes
-//        public let size: Int64
-//        
-//        /// Total size in bytes
-//        public let total: Int64
-        
         /// Current progress measured in [0,1]
         public let current: Double
     }

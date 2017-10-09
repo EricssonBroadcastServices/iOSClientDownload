@@ -17,19 +17,16 @@ public class SessionDelegate: NSObject {
     private var requests: [Int: DownloadTask] = [:]
     private let lock = NSLock()
     
-    /// Access the task delegate for the specified task in a thread-safe manner.
+    /// Access the task delegate for the specified asset identifier in a thread-safe manner.
     internal subscript(identifier: String) -> DownloadTask? {
         get {
             lock.lock() ; defer { lock.unlock() }
             requests.forEach{ print("📍 Active DownloadTask \($0.value.configuration.assetId)") }
             return requests.filter{ $0.value.configuration.assetId == identifier }.first?.value
         }
-//        set {
-//            lock.lock() ; defer { lock.unlock() }
-//            requests[identifier] = newValue
-//        }
     }
     
+    /// Access the task delegate for the specified task in a thread-safe manner.
     internal subscript(task: AVAssetDownloadTask) -> DownloadTask? {
         get {
             lock.lock() ; defer { lock.unlock() }
