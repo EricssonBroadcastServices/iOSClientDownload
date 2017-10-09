@@ -124,6 +124,7 @@ extension SessionDelegate: URLSessionTaskDelegate {
 extension SessionDelegate: URLSessionDelegate {
     public func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
         print("🚨 URLSession invalidated: \(error?.localizedDescription)")
+        // TODO: Invalidated sessions should probably be communicated to the end user somehow. Do we provide an error callback setable from the Manager/Delegate?
     }
     
     public func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
@@ -132,12 +133,6 @@ extension SessionDelegate: URLSessionDelegate {
     
     public func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
         print("🛏 URLSession finished background events")
-        session.getAllTasks{ tasks in
-            tasks.forEach{
-                let task = $0 as! AVAssetDownloadTask
-                print("📌 \(task.taskDescription) - \(task.urlAsset.url)")
-                
-            }
-        }
+        sessionDidFinishEventsForBackgroundURLSession?(session)
     }
 }
