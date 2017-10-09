@@ -194,15 +194,10 @@ public final class DownloadTask {
     }
     
     /// NOTE: Canceling a download in progress will trigger `assetDownloadTask:didFinishDownloadingTo`. That `URL` can be used to "resume" the download at a later time.
-    ///
-    /// TODO: Probably a good idea to 
     public func cancel() {
         // Downloaded HLS assets can be deleted using [NSFileManager removeItemAtURL:] with the URL for the downloaded version of the asset. In addition, if a user deletes the app that downloaded the HLS assets, they will also delete all content that the app stored to disk.
         
         guard let task = self.task else { return }
-        if case .suspended = task.state {
-            task.resume()
-        }
         task.cancel()
 //        switch task.state {
 //        case .suspended:
