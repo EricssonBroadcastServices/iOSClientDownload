@@ -19,48 +19,34 @@ internal class DownloadTaskDelegate: NSObject {
 
 extension DownloadTaskDelegate {
     internal func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        guard let downloadTask = downloadTask else {
+            return
+        }
         
-        guard let downloadTask = downloadTask else { return }
         if let error = error {
-            // Error
-            if let nsError = error as? NSError {
-                switch (nsError.domain, nsError.code) {
-                case (NSURLErrorDomain, NSURLErrorCancelled):
-                    // This task was canceled by user. URL was saved from
-                    guard let location = downloadTask.configuration.destination else {
-                        print("🚨 Failed to delete local media after user cancelled download: destination url not found")
-                        downloadTask.onError(downloadTask, .failedToDeleteMediaUrlNotFound)
-                        return
-                    }
-                    
-                    do {
-                        try FileManager.default.removeItem(at: location)
-                        downloadTask.configuration.destination = nil
-                        print("👍 Cleaned up local media after user cancellation of download")
-                        downloadTask.onCanceled(downloadTask)
-                    }
-                    catch {
-                        print("🚨 Failed to clean local media after user cancelled download:",error.localizedDescription)
-                        downloadTask.onError(downloadTask, .failedToDeleteMedia(error: error))
-                    }
-                default:
-                    downloadTask.onError(downloadTask, .completedWithError(error: error))
-                }
-            }
-            else {
-                downloadTask.onError(downloadTask, .completedWithError(error: error))
-            }
+            // Completed with error
+            handleOnCompletion(error: error, for: downloadTask)
         }
         else {
+            // Completed with success
+            guard let location = downloadTask.configuration.destination else {
+                // Error when no storage url is found
+                print("✅ DownloadTask completed. 🚨 ", DownloadError.completedWithoutValidStorageUrl.localizedDescription)
+                downloadTask.onError(downloadTask, downloadTask.configuration.destination, .completedWithoutValidStorageUrl)
+                return
+            }
+            
             // Success
             guard let resolvedMedia = downloadTask.resolvedMediaSelection else {
                 // 1. No more media available. Trigger onCompleted
-                finalize(downloadTask: downloadTask)
+                print("✅ DownloadTask completed. 💾 Bookmark data stored.")
+                downloadTask.onCompleted(downloadTask, location)
                 return
             }
             
             // 2. Ask, by callback, if and which additional AVMediaSelectionOption's should be included
-            if let newSelection = downloadTask.onShouldDownloadMediaOption(downloadTask, AdditionalMedia(asset: downloadTask.urlAsset)) {
+            if let urlAsset = downloadTask.urlAsset, let newSelection = downloadTask.onShouldDownloadMediaOption(downloadTask, AdditionalMedia(asset: urlAsset)) {
+                
                 // 2.1 User indicated additional media is requested
                 let currentMediaOption = resolvedMedia.mutableCopy() as! AVMutableMediaSelection
                 
@@ -71,7 +57,7 @@ extension DownloadTaskDelegate {
                 downloadTask.startTask(with: options) { [weak self] error in
                     guard let updatedTask = self?.downloadTask else { return }
                     guard error == nil else {
-                        updatedTask.onError(updatedTask, error!)
+                        updatedTask.onError(updatedTask, updatedTask.configuration.url, error!)
                         return
                     }
                     updatedTask.onDownloadingMediaOption(updatedTask, newSelection)
@@ -79,20 +65,31 @@ extension DownloadTaskDelegate {
             }
             else {
                 // 2.2 No additional media was requested
-                finalize(downloadTask: downloadTask)
+                print("✅ DownloadTask completed. 💾 Bookmark data stored.")
+                downloadTask.onCompleted(downloadTask, location)
             }
         }
-        
     }
     
-    private func finalize(downloadTask: DownloadTask) {
-        guard let location = downloadTask.configuration.destination else {
-            // 3. Error when no storage url is found
-            downloadTask.onError(downloadTask, .storageUrlNotFound)
+    private func handleOnCompletion(error: Error, for downloadTask: DownloadTask) {
+        if let nsError = error as? NSError, nsError.domain == NSURLErrorDomain, nsError.code == NSURLErrorCancelled {
+            handleCancellation(task: downloadTask)
+        }
+        else {
+            print("🚨 DownloadTask completed with error:",error.localizedDescription)
+            downloadTask.onError(downloadTask, downloadTask.configuration.destination, .completedWithError(error: error))
+        }
+    }
+    
+    private func handleCancellation(task: DownloadTask) {
+        guard let destination = task.configuration.destination else {
+            print("🚨 DownloadTask cancelled. ⚠️ ", DownloadError.noStoragePathOnCancel.localizedDescription)
+            task.onError(task, task.configuration.destination, .noStoragePathOnCancel)
             return
         }
-        
-        downloadTask.onCompleted(downloadTask, location)
+        task.configuration.destination = nil
+        print("✅ DownloadTask cancelled. 👍 Cleaned up local media.")
+        task.onCanceled(task, destination)
     }
 }
 
@@ -103,10 +100,16 @@ extension DownloadTaskDelegate {
     /// This delegate callback should only be used to save the location URL somewhere in your application. Any additional work should be done in `URLSessionTaskDelegate.urlSession(_:task:didCompleteWithError:)`.
     @available(iOS 10.0, *)
     internal func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didFinishDownloadingTo location: URL) {
+        print("didFinishDownloadingTo",location)
+        
+        if let size = try? Int64(FileManager.default.allocatedSizeOfDirectory(atUrl: location)) {
+            let bytes = ByteCountFormatter.string(fromByteCount: size, countStyle: ByteCountFormatter.CountStyle.file)
+            print("📥 DownloadTask finished. \(bytes) on disk at \(location)")
+        }
+        
         guard let downloadTask = downloadTask else { return }
         
-        // This is the location to save
-        // let locationToSave = location.relativePath
+        // This is the location to save as bookmark data
         downloadTask.configuration.destination = location
     }
     
@@ -120,11 +123,8 @@ extension DownloadTaskDelegate {
             percentComplete += loadedTimeRange.duration.seconds / timeRangeExpectedToLoad.duration.seconds
         }
         
-        let currentSize = currentlyDownloadedSize()
-        let totalSize = currentSize > 0 ? (percentComplete > 0 ? Int64(Double(currentSize) / percentComplete) : 0) : currentSize
-        let progress = DownloadTask.Progress(size: currentSize,
-                                             total: totalSize,
-                                             current: percentComplete)
+        let progress = DownloadTask.Progress(current: percentComplete)
+        print("📥 DownloadTask progress: \(progress.current*100) %")
         downloadTask.onProgress(downloadTask, progress)
     }
     
@@ -132,18 +132,5 @@ extension DownloadTaskDelegate {
     internal func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didResolve resolvedMediaSelection: AVMediaSelection) {
         guard let downloadTask = downloadTask else { return }
         downloadTask.resolvedMediaSelection = resolvedMediaSelection
-    }
-}
-
-extension DownloadTaskDelegate {
-    fileprivate func currentlyDownloadedSize() -> Int64 {
-        guard let destination = downloadTask?.configuration.destination else { return -1 }
-        
-        do {
-            return try Int64(FileManager.default.allocatedSizeOfDirectory(atUrl: destination))
-        }
-        catch {
-            return -1
-        }
     }
 }

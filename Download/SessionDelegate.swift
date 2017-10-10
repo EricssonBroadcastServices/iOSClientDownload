@@ -17,6 +17,15 @@ public class SessionDelegate: NSObject {
     private var requests: [Int: DownloadTask] = [:]
     private let lock = NSLock()
     
+    /// Access the task delegate for the specified asset identifier in a thread-safe manner.
+    internal subscript(identifier: String) -> DownloadTask? {
+        get {
+            lock.lock() ; defer { lock.unlock() }
+            requests.forEach{ print("📍 Active DownloadTask \($0.value.configuration.assetId)") }
+            return requests.filter{ $0.value.configuration.assetId == identifier }.first?.value
+        }
+    }
+    
     /// Access the task delegate for the specified task in a thread-safe manner.
     internal subscript(task: AVAssetDownloadTask) -> DownloadTask? {
         get {
@@ -106,13 +115,16 @@ extension SessionDelegate: URLSessionTaskDelegate {
         
         if let delegate = self[assetDownloadTask]?.delegate {
             delegate.urlSession(session, task: task, didCompleteWithError: error)
+            
+            self[assetDownloadTask] = nil
         }
     }
 }
 
 extension SessionDelegate: URLSessionDelegate {
     public func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
-        
+        print("🚨 URLSession invalidated: \(error?.localizedDescription)")
+        // TODO: Invalidated sessions should probably be communicated to the end user somehow. Do we provide an error callback setable from the Manager/Delegate?
     }
     
     public func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
@@ -120,6 +132,7 @@ extension SessionDelegate: URLSessionDelegate {
     }
     
     public func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
-        
+        print("🛏 URLSession finished background events")
+        sessionDidFinishEventsForBackgroundURLSession?(session)
     }
 }
