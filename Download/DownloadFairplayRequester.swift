@@ -10,12 +10,5 @@ import Foundation
 import AVFoundation
 
 public protocol DownloadFairplayRequester: AVAssetResourceLoaderDelegate {
-//    func storageDirectoryUrlForPersistedContentKey() throws -> URL
-}
 
-extension DownloadFairplayRequester {
-//    func storageUrlForPersistedContentKey(withAssetId assetId: String) throws -> URL {
-//        return try storageDirectoryUrlForPersistedContentKey().appendingPathComponent(assetId+".key")
-//    }
 }
-
