@@ -30,7 +30,6 @@
 		76842FD91F62979A00F1A0D3 /* Fastfile in Resources */ = {isa = PBXBuildFile; fileRef = 76842FD51F62979A00F1A0D3 /* Fastfile */; };
 		76842FDB1F63DC3D00F1A0D3 /* Downloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76842FDA1F63DC3D00F1A0D3 /* Downloader.swift */; };
 		76AD6FA81F821F960084524A /* FileManager+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76AD6FA71F821F960084524A /* FileManager+Extensions.swift */; };
-		76F364AA1F83C84B003280AC /* OfflineFairplayRequester.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F364A91F83C84B003280AC /* OfflineFairplayRequester.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -73,7 +72,6 @@
 		76842FD51F62979A00F1A0D3 /* Fastfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Fastfile; sourceTree = "<group>"; };
 		76842FDA1F63DC3D00F1A0D3 /* Downloader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Downloader.swift; sourceTree = "<group>"; };
 		76AD6FA71F821F960084524A /* FileManager+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FileManager+Extensions.swift"; sourceTree = "<group>"; };
-		76F364A91F83C84B003280AC /* OfflineFairplayRequester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineFairplayRequester.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -133,7 +131,6 @@
 				76782EDE1F801CD9008878F6 /* SessionDelegate.swift */,
 				76782EE01F801D59008878F6 /* DownloadError.swift */,
 				76782EE21F801D71008878F6 /* DownloadFairplayRequester.swift */,
-				76F364A91F83C84B003280AC /* OfflineFairplayRequester.swift */,
 				76782EE41F801D90008878F6 /* DownloadEventPublisher.swift */,
 				76782EE61F801DA9008878F6 /* MediaOption.swift */,
 				76782EE81F801DC8008878F6 /* AdditionalMedia.swift */,
@@ -288,7 +285,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				76F364AA1F83C84B003280AC /* OfflineFairplayRequester.swift in Sources */,
 				76782ED91F801CB9008878F6 /* DownloadTask.swift in Sources */,
 				76782EE71F801DA9008878F6 /* MediaOption.swift in Sources */,
 				76AD6FA81F821F960084524A /* FileManager+Extensions.swift in Sources */,
