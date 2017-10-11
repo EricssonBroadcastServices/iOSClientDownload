@@ -164,6 +164,7 @@ public final class DownloadTask {
             }
             let queue = DispatchQueue(label: configuration.assetId + "-offlineFairplayLoader")
             
+            task.urlAsset.resourceLoader.preloadsEligibleContentKeys = true
             task.urlAsset
                 .resourceLoader
                 .setDelegate(fairplayRequester, queue: queue)

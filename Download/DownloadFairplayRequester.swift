@@ -10,6 +10,5 @@ import Foundation
 import AVFoundation
 
 public protocol DownloadFairplayRequester: AVAssetResourceLoaderDelegate {
-    
-}
 
+}
