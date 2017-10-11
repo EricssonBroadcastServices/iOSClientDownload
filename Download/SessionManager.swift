@@ -95,9 +95,11 @@ extension SessionManager {
                                                        destination: destination)
         
         if let currentTask = delegate[assetId] {
+            print("♻️ Retrieved DownloadTask associated with request for: \(assetId)")
             return currentTask
         }
         else {
+            print("✅ Created new DownloadTask for: \(assetId)")
             return DownloadTask(sessionManager: self, configuration: configuration, fairplayRequester: fairplayRequester)
         }
     }
