@@ -54,7 +54,7 @@ extension DownloadTaskDelegate {
                 
                 let options = [AVAssetDownloadTaskMediaSelectionKey: currentMediaOption]
                 
-                downloadTask.startTask(with: options) { [weak self] error in
+                downloadTask.startTask(with: options) { [weak self] urlTask, error in
                     guard let updatedTask = self?.downloadTask else { return }
                     guard error == nil else {
                         updatedTask.onError(updatedTask, updatedTask.configuration.url, error!)
