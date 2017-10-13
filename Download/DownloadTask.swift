@@ -9,6 +9,17 @@
 import Foundation
 import AVFoundation
 
+public protocol DownloadProcess {
+    associatedtype DownloadState
+    
+    func resume()
+    func suspend()
+    func cancel()
+    
+    func use(bitrate: Int64?) -> Self
+    var state: DownloadState { get }
+}
+
 public final class DownloadTask {
     public struct Progress {
         /// Current progress measured in [0,1]
@@ -59,6 +70,23 @@ public final class DownloadTask {
         self.fairplayRequester = fairplayRequester
     }
     
+    // Configuration
+    fileprivate var requiredBitrate: Int64?
+    
+    // MARK: DownloadEventPublisher
+    internal var onStarted: (DownloadTask) -> Void = { _ in }
+    internal var onSuspended: (DownloadTask) -> Void = { _ in }
+    internal var onResumed: (DownloadTask) -> Void = { _ in }
+    internal var onCanceled: (DownloadTask, URL) -> Void = { _ in }
+    internal var onCompleted: (DownloadTask, URL) -> Void = { _ in }
+    internal var onProgress: (DownloadTask, Progress) -> Void = { _ in }
+    internal var onError: (DownloadTask, URL?, DownloadError) -> Void = { _ in }
+    internal var onPlaybackReady: (DownloadTask, URL) -> Void = { _ in }
+    internal var onShouldDownloadMediaOption: ((DownloadTask, AdditionalMedia) -> MediaOption?) = { _ in return nil }
+    internal var onDownloadingMediaOption: (DownloadTask, MediaOption) -> Void = { _ in }
+}
+
+extension DownloadTask: DownloadProcess {
     // MARK: Controls
     public func resume() {
         // AVAssetDownloadTask provides the ability to resume previously stopped downloads under certain circumstances. To do so, simply instantiate a new AVAssetDownloadTask with an AVURLAsset instantiated with a file NSURL pointing to the partially downloaded bundle with the desired download options, and the download will continue restoring any previously downloaded data. FPS keys remain encrypted in persisted form during this process.
@@ -159,9 +187,6 @@ public final class DownloadTask {
         // NOTE: `onCanceled` called once `didCompleteWithError` delegate methods is triggered
     }
     
-    // Configuration
-    fileprivate var requiredBitrate: Int64?
-    
     /// The lowest media bitrate greater than or equal to this value will be selected. If no suitable media bitrate is found, the highest media bitrate will be selected. If this option is not specified, the highest media bitrate will be selected for download by default.
     ///
     /// - parameter bitrate: The bitrate to select, in bps (bits per second)
@@ -193,18 +218,6 @@ public final class DownloadTask {
     //    public var currentProgress: Progress {
     //        ?????
     //    }
-    
-    // MARK: DownloadEventPublisher
-    internal var onStarted: (DownloadTask) -> Void = { _ in }
-    internal var onSuspended: (DownloadTask) -> Void = { _ in }
-    internal var onResumed: (DownloadTask) -> Void = { _ in }
-    internal var onCanceled: (DownloadTask, URL) -> Void = { _ in }
-    internal var onCompleted: (DownloadTask, URL) -> Void = { _ in }
-    internal var onProgress: (DownloadTask, Progress) -> Void = { _ in }
-    internal var onError: (DownloadTask, URL?, DownloadError) -> Void = { _ in }
-    internal var onPlaybackReady: (DownloadTask, URL) -> Void = { _ in }
-    internal var onShouldDownloadMediaOption: ((DownloadTask, AdditionalMedia) -> MediaOption?) = { _ in return nil }
-    internal var onDownloadingMediaOption: (DownloadTask, MediaOption) -> Void = { _ in }
 }
 
 extension DownloadTask {
