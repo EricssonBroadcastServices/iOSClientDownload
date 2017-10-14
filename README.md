@@ -18,13 +18,13 @@
 
 
 ## Features
-- [x] VoD, live and catchup streaming
-- [x] FairPlay DRM protection
-- [x] Playback event publishing
-- [x] Pluggable analytics provider
-- [x] Airplay
-- [x] Custom playback controls
-- [x] Multi-device session shift
+- [x] Easy task management
+- [x] `FairPlay` DRM protection
+- [x] Background downloads
+- [x] Event publishing and progress tracking
+- [x] Task restoration and recovery
+- [x] Download quality selection
+- [x] Complementary subtitle and audio selections
 
 ## Requirements
 
