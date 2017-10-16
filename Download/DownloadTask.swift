@@ -51,6 +51,10 @@ public final class DownloadTask {
         return task?.urlAsset
     }
     
+    public var assetId: String {
+        return configuration.assetId
+    }
+    
     internal lazy var delegate: DownloadTaskDelegate = { [unowned self] in
         return DownloadTaskDelegate(task: self)
         }()

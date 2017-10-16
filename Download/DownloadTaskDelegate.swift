@@ -39,7 +39,7 @@ extension DownloadTaskDelegate {
             // Success
             guard let resolvedMedia = downloadTask.resolvedMediaSelection else {
                 // 1. No more media available. Trigger onCompleted
-                print("✅ DownloadTask completed. 💾 Bookmark data stored.")
+                print("✅ DownloadTask completed.")
                 downloadTask.onCompleted(downloadTask, location)
                 return
             }
@@ -65,7 +65,7 @@ extension DownloadTaskDelegate {
             }
             else {
                 // 2.2 No additional media was requested
-                print("✅ DownloadTask completed. 💾 Bookmark data stored.")
+                print("✅ DownloadTask completed.")
                 downloadTask.onCompleted(downloadTask, location)
             }
         }
