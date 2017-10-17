@@ -125,21 +125,7 @@ extension SessionManager {
                 }
                 
                 print("♻️ Found AVAssetDownloadTask \(assetId)",assetTask.urlAsset.url)
-                switch assetTask.state {
-                case .canceling: print("canceling")
-                case .running: print("running")
-                case .suspended: print("suspended")
-                case .completed: print("completed")
-                }
-                if let taskError = assetTask.error as? NSError {
-                    if let reason = taskError.userInfo[NSURLErrorBackgroundTaskCancelledReasonKey] as? Int {
-                        let code = taskError.code
-                        if reason == NSURLErrorCancelledReasonUserForceQuitApplication &&
-                            code == NSURLErrorCancelled {
-                            print("NSURLErrorCancelledReasonUserForceQuitApplication")
-                        }
-                    }
-                }
+                weakSelf.printRelovedState(for: assetTask)
                 
                 let configuration = DownloadTask.Configuration(url: assetTask.urlAsset.url,
                                                                assetId: assetId,
@@ -176,21 +162,7 @@ extension SessionManager {
                         
                         
                         print("♻️ Found AVAssetDownloadTask \(assetId)",assetTask.urlAsset.url)
-                        switch assetTask.state {
-                        case .canceling: print("canceling")
-                        case .running: print("running")
-                        case .suspended: print("suspended")
-                        case .completed: print("completed")
-                        }
-                        if let taskError = assetTask.error as? NSError {
-                            if let reason = taskError.userInfo[NSURLErrorBackgroundTaskCancelledReasonKey] as? Int {
-                                let code = taskError.code
-                                if reason == NSURLErrorCancelledReasonUserForceQuitApplication &&
-                                    code == NSURLErrorCancelled {
-                                    print("NSURLErrorCancelledReasonUserForceQuitApplication")
-                                }
-                            }
-                        }
+                        weakSelf.printRelovedState(for: assetTask)
                         
                         let configuration = DownloadTask.Configuration(url: assetTask.urlAsset.url,
                                                                        assetId: assetId,
@@ -205,4 +177,23 @@ extension SessionManager {
                 callback(downloadTasks)
         }
     }
+    
+    private func printRelovedState(for assetTask: AVAssetDownloadTask) {
+        switch assetTask.state {
+        case .canceling: print("canceling")
+        case .running: print("running")
+        case .suspended: print("suspended")
+        case .completed: print("completed")
+        }
+        if let taskError = assetTask.error as? NSError {
+            if let reason = taskError.userInfo[NSURLErrorBackgroundTaskCancelledReasonKey] as? Int {
+                let code = taskError.code
+                if reason == NSURLErrorCancelledReasonUserForceQuitApplication &&
+                    code == NSURLErrorCancelled {
+                    print("NSURLErrorCancelledReasonUserForceQuitApplication")
+                }
+            }
+        }
+    }
+    
 }
