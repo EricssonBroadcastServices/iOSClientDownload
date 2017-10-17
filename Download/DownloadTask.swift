@@ -113,9 +113,11 @@ extension DownloadTask: DownloadProcess {
         // A task has been previously prepared, trigger the correct callbacks.
         switch task.state {
         case .running:
+            sessionManager.delegate[task] = self
             onPrepared(self)
             onResumed(self)
         case .suspended:
+            sessionManager.delegate[task] = self
             onPrepared(self)
             onSuspended(self)
         case .canceling:
@@ -126,6 +128,12 @@ extension DownloadTask: DownloadProcess {
             }
             else {
                 // Handle completion
+                if let destination = configuration.destination {
+                    onCompleted(self, destination)
+                }
+                else {
+                    onError(self, configuration.destination, .completedWithoutValidStorageUrl)
+                }
             }
         }
         return self

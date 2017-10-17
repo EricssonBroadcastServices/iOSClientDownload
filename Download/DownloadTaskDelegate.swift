@@ -91,7 +91,7 @@ extension DownloadTaskDelegate {
             return
         }
         task.configuration.destination = nil
-        print("✅ DownloadTask cancelled. 👍 Cleaned up local media.")
+        print("✅ DownloadTask cancelled.",task.configuration.url)
         task.onCanceled(task, destination)
     }
 }
