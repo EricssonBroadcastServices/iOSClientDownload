@@ -14,6 +14,9 @@ NO RELEASE YET
 
 #### Changes
 * `EMP-10486` Removed `Downloader` in favour of using `SessionManager` directly.
+
+#### Bug Fixes
+* `DownloadTask`s restored from a completed state with error now forwards that error.
     
 
 #### Known Limitations
