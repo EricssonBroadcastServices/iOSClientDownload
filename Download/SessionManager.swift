@@ -126,7 +126,25 @@ extension SessionManager {
                             print("❌ Ignoring AVAssetDownloadTask without a unique assetId.")
                             return nil
                         }
-                        print("♻️ Found AVAssetDownloadTask \(assetId)")
+                        
+                        
+                        print("♻️ Found AVAssetDownloadTask \(assetId)",assetTask.urlAsset.url)
+                        switch assetTask.state {
+                        case .canceling: print("canceling")
+                        case .running: print("running")
+                        case .suspended: print("suspended")
+                        case .completed: print("completed")
+                        }
+                        if let taskError = assetTask.error as? NSError {
+                            if let reason = taskError.userInfo[NSURLErrorBackgroundTaskCancelledReasonKey] as? Int {
+                                let code = taskError.code
+                                if reason == NSURLErrorCancelledReasonUserForceQuitApplication &&
+                                    code == NSURLErrorCancelled {
+                                    print("NSURLErrorCancelledReasonUserForceQuitApplication")
+                                }
+                            }
+                        }
+                        
                         let configuration = DownloadTask.Configuration(url: assetTask.urlAsset.url,
                                                                        assetId: assetId,
                                                                        artwork: nil,

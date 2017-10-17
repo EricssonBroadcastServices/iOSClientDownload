@@ -78,7 +78,8 @@ public final class DownloadTask {
     fileprivate var requiredBitrate: Int64?
     
     // MARK: DownloadEventPublisher
-    internal var onStarted: (DownloadTask) -> Void = { _ in }
+    
+    internal var onPrepared: (DownloadTask) -> Void = { _ in }
     internal var onSuspended: (DownloadTask) -> Void = { _ in }
     internal var onResumed: (DownloadTask) -> Void = { _ in }
     internal var onCanceled: (DownloadTask, URL) -> Void = { _ in }
@@ -91,34 +92,59 @@ public final class DownloadTask {
 }
 
 extension DownloadTask: DownloadProcess {
+    /// - parameter lazily: `true` will delay creation of new tasks until the user calls `resume()`. `false` will force create the task if none exists.
+    @discardableResult
+    public func prepare(lazily: Bool = true) -> DownloadTask {
+        guard let task = task else {
+            if !lazily {
+                print("✅ No AVAssetDownloadTask prepared, creating new for: \(configuration.assetId)")
+                // Create a fresh task
+                let options = requiredBitrate != nil ? [AVAssetDownloadTaskMinimumRequiredMediaBitrateKey: requiredBitrate!] : nil
+                
+                configureTask(with: options) { urlTask, error in
+                    if let error = error {
+                        onError(self, configuration.destination, error)
+                        return
+                    }
+                }
+            }
+            return self
+        }
+        // A task has been previously prepared, trigger the correct callbacks.
+        switch task.state {
+        case .running:
+            onPrepared(self)
+            onResumed(self)
+        case .suspended:
+            onPrepared(self)
+            onSuspended(self)
+        case .canceling:
+            break
+        case .completed:
+            if let error = task.error {
+                onError(self, configuration.destination, .completedWithError(error: error))
+            }
+            else {
+                // Handle completion
+            }
+        }
+        return self
+    }
+    
     // MARK: Controls
     public func resume() {
         // AVAssetDownloadTask provides the ability to resume previously stopped downloads under certain circumstances. To do so, simply instantiate a new AVAssetDownloadTask with an AVURLAsset instantiated with a file NSURL pointing to the partially downloaded bundle with the desired download options, and the download will continue restoring any previously downloaded data. FPS keys remain encrypted in persisted form during this process.
         guard let task = task else {
-            createNewTask(with: configuration)
+            prepare(lazily: false)
+            self.task?.resume()
+            onResumed(self)
             return
         }
         task.resume()
         onResumed(self)
     }
     
-    private func createNewTask(with configuration: Configuration) {
-        print("✅ Creating new DownloadTask for: \(configuration.assetId)")
-        // Create a fresh task
-        let options = requiredBitrate != nil ? [AVAssetDownloadTaskMinimumRequiredMediaBitrateKey: requiredBitrate!] : nil
-        
-        startTask(with: options) { task, error in
-            if let error = error {
-                onError(self, configuration.destination, error)
-                return
-            }
-            task!.resume()
-            onStarted(self)
-            onResumed(self)
-        }
-    }
-    
-    internal func startTask(with options: [String: Any]?, callback: (AVAssetDownloadTask? ,DownloadError?) -> Void) {
+    internal func configureTask(with options: [String: Any]?, callback: (AVAssetDownloadTask?, DownloadError?) -> Void) {
             if #available(iOS 10.0, *) {
                 guard let task = sessionManager
                     .session
@@ -169,8 +195,8 @@ extension DownloadTask: DownloadProcess {
         }
         
         sessionManager.delegate[task] = self
-        
         print("👍 DownloadTask prepared")
+        onPrepared(self)
     }
     
     public func suspend() {
@@ -249,8 +275,8 @@ extension DownloadTask: DownloadEventPublisher {
     public typealias DownloadEventError = DownloadError
     
     @discardableResult
-    public func onStarted(callback: @escaping (DownloadTask) -> Void) -> DownloadTask {
-        onStarted = callback
+    public func onPrepared(callback: @escaping (DownloadTask) -> Void) -> DownloadTask {
+        onPrepared = callback
         return self
     }
     
