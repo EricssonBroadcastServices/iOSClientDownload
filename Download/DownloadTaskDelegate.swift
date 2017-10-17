@@ -54,7 +54,7 @@ extension DownloadTaskDelegate {
                 
                 let options = [AVAssetDownloadTaskMediaSelectionKey: currentMediaOption]
                 
-                downloadTask.startTask(with: options) { [weak self] urlTask, error in
+                downloadTask.configureTask(with: options) { [weak self] urlTask, error in
                     guard let updatedTask = self?.downloadTask else { return }
                     guard error == nil else {
                         updatedTask.onError(updatedTask, updatedTask.configuration.url, error!)
@@ -62,6 +62,9 @@ extension DownloadTaskDelegate {
                     }
                     updatedTask.onDownloadingMediaOption(updatedTask, newSelection)
                 }
+                
+                downloadTask.resume()
+//                onResumed(self)
             }
             else {
                 // 2.2 No additional media was requested
@@ -88,7 +91,7 @@ extension DownloadTaskDelegate {
             return
         }
         task.configuration.destination = nil
-        print("✅ DownloadTask cancelled. 👍 Cleaned up local media.")
+        print("✅ DownloadTask cancelled.",task.configuration.url)
         task.onCanceled(task, destination)
     }
 }

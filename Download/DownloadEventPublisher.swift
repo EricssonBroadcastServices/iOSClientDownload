@@ -12,7 +12,7 @@ public protocol DownloadEventPublisher {
     associatedtype DownloadEventProgress
     associatedtype DownloadEventError
     
-    func onStarted(callback: @escaping (Self) -> Void) -> Self
+    func onPrepared(callback: @escaping (Self) -> Void) -> Self
     
     func onSuspended(callback: @escaping (Self) -> Void) -> Self
     
