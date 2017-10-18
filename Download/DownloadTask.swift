@@ -20,75 +20,46 @@ public protocol DownloadProcess {
     var state: DownloadState { get }
 }
 
-public final class DownloadTask {
-    public struct Progress {
-        /// Current progress measured in [0,1]
-        public let current: Double
-    }
+
+public struct Progress {
+    /// Current progress measured in [0,1]
+    public let current: Double
+}
+public final class DownloadTask: DownloadTaskType {
     
-    internal struct Configuration {
-        let url: URL
-        let assetId: String
-        let artwork: Data?
-        
-        /// location.bookmarkData()
-        /// Bookmark data should be used when persisting this url to disk
-        ///
-        /// - important: destination URL will be handled diffrently on iOS 9 vs iOS 10. On the later version, storage url for local media is handled and assigned by the system. In iOS 9 this path is supplied by the user.
-        var destination: URL?
-    }
+    public let eventPublishTransmitter = DownloadEventPublishTransmitter<DownloadTask>()
     
-    
-    ///  During the initial asset download, the user’s default media selections—their primary audio and video tracks—are downloaded. If additional media selections such as subtitles, closed captions, or alternative audio tracks are found, the session delegate’s URLSession:assetDownloadTask:didResolveMediaSelection: method is called, indicating that additional media selections exist on the server. To download additional media selections, save a reference to this resolved AVMediaSelection object so you can create subsequent download tasks to be executed serially.
-    internal var resolvedMediaSelection: AVMediaSelection?
-    
-    fileprivate var task: AVAssetDownloadTask?
-    internal var configuration: Configuration
-    fileprivate var fairplayRequester: DownloadFairplayRequester?
-    fileprivate let sessionManager: SessionManager
+    public var task: AVAssetDownloadTask?
+    public var configuration: Configuration
+    public var progression: Progression
+    public var fairplayRequester: DownloadFairplayRequester?
+    public let sessionManager: SessionManager<DownloadTask>
     
     internal var urlAsset: AVURLAsset? {
         return task?.urlAsset
     }
     
-    public var assetId: String {
-        return configuration.assetId
-    }
     
-    internal lazy var delegate: DownloadTaskDelegate = { [unowned self] in
+    public lazy var delegate: DownloadTaskDelegate = { [unowned self] in
         return DownloadTaskDelegate(task: self)
         }()
     
     
     /// New, fresh DownloadTasks
-    internal init(sessionManager: SessionManager, configuration: Configuration, fairplayRequester: DownloadFairplayRequester? = nil) {
+    public init(sessionManager: SessionManager<DownloadTask>, configuration: Configuration, fairplayRequester: DownloadFairplayRequester? = nil, progression: Progression = Progression()) {
         self.sessionManager = sessionManager
         self.configuration = configuration
         self.fairplayRequester = fairplayRequester
+        self.progression = progression
     }
     
-    internal init(restoredTask: AVAssetDownloadTask, sessionManager: SessionManager, configuration: Configuration, fairplayRequester: DownloadFairplayRequester? = nil) {
+    public init(restoredTask: AVAssetDownloadTask, sessionManager: SessionManager<DownloadTask>, configuration: Configuration, fairplayRequester: DownloadFairplayRequester? = nil, progression: Progression = Progression()) {
         self.task = restoredTask
         self.sessionManager = sessionManager
         self.configuration = configuration
         self.fairplayRequester = fairplayRequester
+        self.progression = progression
     }
-    
-    // Configuration
-    fileprivate var requiredBitrate: Int64?
-    
-    // MARK: DownloadEventPublisher
-    
-    internal var onPrepared: (DownloadTask) -> Void = { _ in }
-    internal var onSuspended: (DownloadTask) -> Void = { _ in }
-    internal var onResumed: (DownloadTask) -> Void = { _ in }
-    internal var onCanceled: (DownloadTask, URL) -> Void = { _ in }
-    internal var onCompleted: (DownloadTask, URL) -> Void = { _ in }
-    internal var onProgress: (DownloadTask, Progress) -> Void = { _ in }
-    internal var onError: (DownloadTask, URL?, DownloadError) -> Void = { _ in }
-    internal var onPlaybackReady: (DownloadTask, URL) -> Void = { _ in }
-    internal var onShouldDownloadMediaOption: ((DownloadTask, AdditionalMedia) -> MediaOption?) = { _ in return nil }
-    internal var onDownloadingMediaOption: (DownloadTask, MediaOption) -> Void = { _ in }
 }
 
 extension DownloadTask: DownloadProcess {
@@ -96,115 +67,62 @@ extension DownloadTask: DownloadProcess {
     @discardableResult
     public func prepare(lazily: Bool = true) -> DownloadTask {
         guard let task = task else {
-            if !lazily {
-                print("✅ No AVAssetDownloadTask prepared, creating new for: \(configuration.assetId)")
-                // Create a fresh task
-                let options = requiredBitrate != nil ? [AVAssetDownloadTaskMinimumRequiredMediaBitrateKey: requiredBitrate!] : nil
-                
-                configureTask(with: options) { urlTask, error in
-                    if let error = error {
-                        onError(self, configuration.destination, error)
-                        return
-                    }
-                }
-            }
+            restoreOrCreate(forceNew: !lazily)
             return self
         }
         // A task has been previously prepared, trigger the correct callbacks.
-        switch task.state {
-        case .running:
-            sessionManager.delegate[task] = self
-            onPrepared(self)
-            onResumed(self)
-        case .suspended:
-            sessionManager.delegate[task] = self
-            onPrepared(self)
-            onSuspended(self)
-        case .canceling:
-            break
-        case .completed:
-            if let error = task.error {
-                onError(self, configuration.destination, .completedWithError(error: error))
+        handle(restoredTask: task)
+        return self
+    }
+    
+    fileprivate func restoreOrCreate(forceNew: Bool, callback: @escaping () -> Void = { _ in }) {
+        sessionManager.restoreTask(with: configuration.identifier) { [weak self] restoredTask in
+            guard let weakSelf = self else { return }
+            if let restoredTask = restoredTask {
+                weakSelf.configureResourceLoader(for: restoredTask)
+                
+                weakSelf.task = restoredTask
+                weakSelf.sessionManager.delegate[restoredTask] = weakSelf
+                
+                weakSelf.handle(restoredTask: restoredTask)
             }
             else {
-                // Handle completion
-                if let destination = configuration.destination {
-                    onCompleted(self, destination)
-                }
-                else {
-                    onError(self, configuration.destination, .completedWithoutValidStorageUrl)
+                if forceNew {
+                    print("✅ No AVAssetDownloadTask prepared, creating new for: \(weakSelf.configuration.identifier)")
+                    // Create a fresh task
+                    let options = weakSelf.configuration.requiredBitrate != nil ? [AVAssetDownloadTaskMinimumRequiredMediaBitrateKey: weakSelf.configuration.requiredBitrate!] : nil
+                    weakSelf.createAndConfigureTask(with: options, using: weakSelf.configuration) { urlTask, error in
+                        if let error = error {
+                            weakSelf.eventPublishTransmitter.onError(weakSelf, weakSelf.progression.destination, error)
+                            return
+                        }
+                        
+                        if let urlTask = urlTask {
+                            weakSelf.task = urlTask
+                            weakSelf.sessionManager.delegate[urlTask] = weakSelf
+                            print("👍 DownloadTask prepared")
+                            weakSelf.eventPublishTransmitter.onPrepared(weakSelf)
+                        }
+                    }
                 }
             }
+            callback()
         }
-        return self
     }
     
     // MARK: Controls
     public func resume() {
         // AVAssetDownloadTask provides the ability to resume previously stopped downloads under certain circumstances. To do so, simply instantiate a new AVAssetDownloadTask with an AVURLAsset instantiated with a file NSURL pointing to the partially downloaded bundle with the desired download options, and the download will continue restoring any previously downloaded data. FPS keys remain encrypted in persisted form during this process.
         guard let task = task else {
-            prepare(lazily: false)
-            self.task?.resume()
-            onResumed(self)
+            restoreOrCreate(forceNew: true) { [weak self] in
+                guard let `self` = self else { return }
+                `self`.task?.resume()
+                `self`.eventPublishTransmitter.onResumed(`self`)
+            }
             return
         }
         task.resume()
-        onResumed(self)
-    }
-    
-    internal func configureTask(with options: [String: Any]?, callback: (AVAssetDownloadTask?, DownloadError?) -> Void) {
-            if #available(iOS 10.0, *) {
-                guard let task = sessionManager
-                    .session
-                    .makeAssetDownloadTask(asset: AVURLAsset(url: configuration.url),
-                                           assetTitle: configuration.assetId,
-                                           assetArtworkData: configuration.artwork,
-                                           options: options) else {
-                                            // This method may return nil if the AVAssetDownloadURLSession has been invalidated.
-                                            callback(nil,.downloadSessionInvalidated)
-                                            return
-                }
-                task.taskDescription = configuration.assetId
-                finalizePreparation(of: task)
-                callback(task,nil)
-            }
-            else {
-                guard let destination = configuration.destination else {
-                    onError(self, configuration.destination, .failedToStartTaskWithoutDestination)
-                    return
-                }
-                guard let task = sessionManager
-                    .session
-                    .makeAssetDownloadTask(asset: AVURLAsset(url: configuration.url),
-                                           destinationURL: destination,
-                                           options: options) else {
-                                            // This method may return nil if the URLSession has been invalidated
-                                            callback(nil,.downloadSessionInvalidated)
-                                            return
-                }
-                task.taskDescription = configuration.assetId
-                finalizePreparation(of: task)
-                callback(task,nil)
-            }
-    }
-    
-    private func finalizePreparation(of task: AVAssetDownloadTask) {
-        self.task = task
-        if fairplayRequester != nil {
-            if task.urlAsset.resourceLoader.delegate != nil {
-                task.urlAsset.resourceLoader.setDelegate(nil, queue: nil)
-            }
-            let queue = DispatchQueue(label: configuration.assetId + "-offlineFairplayLoader")
-            
-            task.urlAsset.resourceLoader.preloadsEligibleContentKeys = true
-            task.urlAsset
-                .resourceLoader
-                .setDelegate(fairplayRequester, queue: queue)
-        }
-        
-        sessionManager.delegate[task] = self
-        print("👍 DownloadTask prepared")
-        onPrepared(self)
+        eventPublishTransmitter.onResumed(self)
     }
     
     public func suspend() {
@@ -212,7 +130,7 @@ extension DownloadTask: DownloadProcess {
         
         guard let task = self.task else { return }
         task.suspend()
-        onSuspended(self)
+        eventPublishTransmitter.onSuspended(self)
     }
     
     /// NOTE: Canceling a download in progress will trigger `assetDownloadTask:didFinishDownloadingTo`. That `URL` can be used to "resume" the download at a later time.
@@ -225,14 +143,6 @@ extension DownloadTask: DownloadProcess {
         // NOTE: `onCanceled` called once `didCompleteWithError` delegate methods is triggered
     }
     
-    /// The lowest media bitrate greater than or equal to this value will be selected. If no suitable media bitrate is found, the highest media bitrate will be selected. If this option is not specified, the highest media bitrate will be selected for download by default.
-    ///
-    /// - parameter bitrate: The bitrate to select, in bps (bits per second)
-    @discardableResult
-    public func use(bitrate: Int64?) -> DownloadTask {
-        requiredBitrate = bitrate
-        return self
-    }
     
     public enum State {
         case notStarted
@@ -279,66 +189,5 @@ extension DownloadTask {
 }
 
 extension DownloadTask: DownloadEventPublisher {
-    public typealias DownloadEventProgress = Progress
     public typealias DownloadEventError = DownloadError
-    
-    @discardableResult
-    public func onPrepared(callback: @escaping (DownloadTask) -> Void) -> DownloadTask {
-        onPrepared = callback
-        return self
-    }
-    
-    @discardableResult
-    public func onSuspended(callback: @escaping (DownloadTask) -> Void) -> DownloadTask {
-        onSuspended = callback
-        return self
-    }
-    
-    @discardableResult
-    public func onResumed(callback: @escaping (DownloadTask) -> Void) -> DownloadTask {
-        onResumed = callback
-        return self
-    }
-    
-    @discardableResult
-    public func onCanceled(callback: @escaping (DownloadTask, URL) -> Void) -> DownloadTask {
-        onCanceled = callback
-        return self
-    }
-    
-    @discardableResult
-    public func onCompleted(callback: @escaping (DownloadTask, URL) -> Void) -> DownloadTask {
-        onCompleted = callback
-        return self
-    }
-    
-    @discardableResult
-    public func onProgress(callback: @escaping (DownloadTask, Progress) -> Void) -> DownloadTask {
-        onProgress = callback
-        return self
-    }
-    
-    @discardableResult
-    public func onError(callback: @escaping (DownloadTask, URL?, DownloadError) -> Void) -> DownloadTask {
-        onError = callback
-        return self
-    }
-    
-    @discardableResult
-    public func onPlaybackReady(callback: @escaping (DownloadTask, URL) -> Void) -> DownloadTask {
-        onPlaybackReady = callback
-        return self
-    }
-    
-    @discardableResult
-    public func onShouldDownloadMediaOption(callback: @escaping (DownloadTask, AdditionalMedia) -> MediaOption?) -> DownloadTask {
-        onShouldDownloadMediaOption = callback
-        return self
-    }
-    
-    @discardableResult
-    public func onDownloadingMediaOption(callback: @escaping (DownloadTask, MediaOption) -> Void) -> DownloadTask {
-        onDownloadingMediaOption = callback
-        return self
-    }
 }

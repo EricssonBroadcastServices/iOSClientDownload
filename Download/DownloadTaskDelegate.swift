@@ -9,10 +9,10 @@
 import Foundation
 import AVFoundation
 
-internal class DownloadTaskDelegate: NSObject {
-    internal var downloadTask: DownloadTask?
+public class DownloadTaskDelegate<Task: DownloadTaskType>: NSObject {
+    internal var downloadTask: Task?
     
-    internal init(task: DownloadTask) {
+    public init(task: Task) {
         downloadTask = task
     }
 }
@@ -29,23 +29,23 @@ extension DownloadTaskDelegate {
         }
         else {
             // Completed with success
-            guard let location = downloadTask.configuration.destination else {
+            guard let location = downloadTask.progression.destination else {
                 // Error when no storage url is found
                 print("✅ DownloadTask completed. 🚨 ", DownloadError.completedWithoutValidStorageUrl.localizedDescription)
-                downloadTask.onError(downloadTask, downloadTask.configuration.destination, .completedWithoutValidStorageUrl)
+                downloadTask.eventPublishTransmitter.onError(downloadTask, nil, .downloadError(reason: .completedWithoutValidStorageUrl))
                 return
             }
             
             // Success
-            guard let resolvedMedia = downloadTask.resolvedMediaSelection else {
+            guard let resolvedMedia = downloadTask.progression.resolvedMediaSelection else {
                 // 1. No more media available. Trigger onCompleted
                 print("✅ DownloadTask completed.")
-                downloadTask.onCompleted(downloadTask, location)
+                downloadTask.eventPublishTransmitter.onCompleted(downloadTask, location)
                 return
             }
             
             // 2. Ask, by callback, if and which additional AVMediaSelectionOption's should be included
-            if let urlAsset = downloadTask.urlAsset, let newSelection = downloadTask.onShouldDownloadMediaOption(downloadTask, AdditionalMedia(asset: urlAsset)) {
+            if let urlAsset = downloadTask.task?.urlAsset, let newSelection = downloadTask.eventPublishTransmitter.onShouldDownloadMediaOption(downloadTask, AdditionalMedia(asset: urlAsset)) {
                 
                 // 2.1 User indicated additional media is requested
                 let currentMediaOption = resolvedMedia.mutableCopy() as! AVMutableMediaSelection
@@ -54,13 +54,13 @@ extension DownloadTaskDelegate {
                 
                 let options = [AVAssetDownloadTaskMediaSelectionKey: currentMediaOption]
                 
-                downloadTask.configureTask(with: options) { [weak self] urlTask, error in
+                downloadTask.createAndConfigureTask(with: options, using: downloadTask.configuration) { [weak self] urlTask, error in
                     guard let updatedTask = self?.downloadTask else { return }
                     guard error == nil else {
-                        updatedTask.onError(updatedTask, updatedTask.configuration.url, error!)
+                        updatedTask.eventPublishTransmitter.onError(updatedTask, updatedTask.progression.destination, error!)
                         return
                     }
-                    updatedTask.onDownloadingMediaOption(updatedTask, newSelection)
+                    updatedTask.eventPublishTransmitter.onDownloadingMediaOption(updatedTask, newSelection)
                 }
                 
                 downloadTask.resume()
@@ -69,30 +69,30 @@ extension DownloadTaskDelegate {
             else {
                 // 2.2 No additional media was requested
                 print("✅ DownloadTask completed.")
-                downloadTask.onCompleted(downloadTask, location)
+                downloadTask.eventPublishTransmitter.onCompleted(downloadTask, location)
             }
         }
     }
     
-    private func handleOnCompletion(error: Error, for downloadTask: DownloadTask) {
+    private func handleOnCompletion(error: Error, for downloadTask: Task) {
         if let nsError = error as? NSError, nsError.domain == NSURLErrorDomain, nsError.code == NSURLErrorCancelled {
             handleCancellation(task: downloadTask)
         }
         else {
             print("🚨 DownloadTask completed with error:",error.localizedDescription)
-            downloadTask.onError(downloadTask, downloadTask.configuration.destination, .completedWithError(error: error))
+            downloadTask.eventPublishTransmitter.onError(downloadTask, downloadTask.progression.destination, .downloadError(reason: .completedWithError(error: error)))
         }
     }
     
-    private func handleCancellation(task: DownloadTask) {
-        guard let destination = task.configuration.destination else {
+    private func handleCancellation(task: Task) {
+        guard let destination = task.progression.destination else {
             print("🚨 DownloadTask cancelled. ⚠️ ", DownloadError.noStoragePathOnCancel.localizedDescription)
-            task.onError(task, task.configuration.destination, .noStoragePathOnCancel)
+            task.eventPublishTransmitter.onError(task, task.progression.destination, .downloadError(reason: .noStoragePathOnCancel))
             return
         }
-        task.configuration.destination = nil
-        print("✅ DownloadTask cancelled.",task.configuration.url)
-        task.onCanceled(task, destination)
+        task.progression.destination = nil
+        print("✅ DownloadTask cancelled.",task.configuration.identifier)
+        task.eventPublishTransmitter.onCanceled(task, destination)
     }
 }
 
@@ -113,7 +113,7 @@ extension DownloadTaskDelegate {
         guard let downloadTask = downloadTask else { return }
         
         // This is the location to save as bookmark data
-        downloadTask.configuration.destination = location
+        downloadTask.progression.destination = location
     }
     
     @available(iOS 9.0, *)
@@ -126,14 +126,14 @@ extension DownloadTaskDelegate {
             percentComplete += loadedTimeRange.duration.seconds / timeRangeExpectedToLoad.duration.seconds
         }
         
-        let progress = DownloadTask.Progress(current: percentComplete)
+        let progress = Progress(current: percentComplete)
         print("📥 DownloadTask progress: \(progress.current*100) %")
-        downloadTask.onProgress(downloadTask, progress)
+        downloadTask.eventPublishTransmitter.onProgress(downloadTask, progress)
     }
     
     @available(iOS 9.0, *)
     internal func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didResolve resolvedMediaSelection: AVMediaSelection) {
         guard let downloadTask = downloadTask else { return }
-        downloadTask.resolvedMediaSelection = resolvedMediaSelection
+        downloadTask.progression.resolvedMediaSelection = resolvedMediaSelection
     }
 }

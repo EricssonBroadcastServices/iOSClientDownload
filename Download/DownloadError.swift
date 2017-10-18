@@ -8,7 +8,7 @@
 
 import Foundation
 
-public enum DownloadError: Error {
+public enum DownloadError: DownloadErrorConvertible {
     case generalError(error: Error)
     
     case failedToStartTaskWithoutDestination
@@ -16,14 +16,17 @@ public enum DownloadError: Error {
     case completedWithoutValidStorageUrl
     case noStoragePathOnCancel
     case downloadSessionInvalidated
-    
-    /// Unable to load a valid `URL` from path.
-    case invalidMediaUrl(path: String)
-    
     case storageUrlNotFound
+    case targetUrlNotFound
     
+    public static func downloadError(reason: DownloadError) -> DownloadError {
+        return reason
+    }
 }
 
+public protocol DownloadErrorConvertible: Error {
+    static func downloadError(reason: DownloadError) -> Self
+}
 
 extension DownloadError {
     public var localizedDescription: String {
@@ -31,11 +34,11 @@ extension DownloadError {
         case .generalError(error: let error): return "General Error: " + error.localizedDescription
         case .failedToStartTaskWithoutDestination: return "Task failed to start. No valid destination supplied"
         case .completedWithError(error: let error): return "Completed with error: " + error.localizedDescription
-        case .completedWithoutValidStorageUrl: return "Completed task has to url to downloaded media"
+        case .completedWithoutValidStorageUrl: return "Completed task has no url to downloaded media"
         case .noStoragePathOnCancel: return "Canceled task has no url to downloaded media"
         case .downloadSessionInvalidated: return "URLSession was invalidated"
-        case .invalidMediaUrl(path: let path): return "The supplied path does not specify a valid URL: " + path
         case .storageUrlNotFound: return "Bookmarking resume data requires a destination URL"
+        case .targetUrlNotFound: return "No target url set for download"
         }
     }
 }
@@ -50,8 +53,8 @@ extension DownloadError {
         case .completedWithoutValidStorageUrl: return 104
         case .noStoragePathOnCancel: return 105
         case .downloadSessionInvalidated: return 106
-        case .invalidMediaUrl(path: _): return 107
-        case .storageUrlNotFound: return 108
+        case .storageUrlNotFound: return 107
+        case .targetUrlNotFound: return 108
         }
     }
 }
