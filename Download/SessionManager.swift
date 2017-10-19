@@ -24,7 +24,7 @@ public class Configuration {
 }
 
 public class Progression {
-    /// location.bookmarkData()
+    /// destination.bookmarkData()
     /// Bookmark data should be used when persisting this url to disk
     ///
     /// - important: destination URL will be handled diffrently on iOS 9 vs iOS 10. On the later version, storage url for local media is handled and assigned by the system. In iOS 9 this path is supplied by the user.
@@ -39,134 +39,10 @@ public class Progression {
     }
 }
 
-public protocol DownloadTaskType: class, DownloadEventPublisher, DownloadProcess {
-    
-    var configuration: Configuration { get }
-    var progression: Progression { get }
-    var sessionManager: SessionManager<Self> { get }
-    var delegate: DownloadTaskDelegate<Self> { get }
-    var fairplayRequester: DownloadFairplayRequester? { get }
-    var task: AVAssetDownloadTask? { get }
-}
 
-extension DownloadTaskType {
-    /// The lowest media bitrate greater than or equal to this value will be selected. If no suitable media bitrate is found, the highest media bitrate will be selected. If this option is not specified, the highest media bitrate will be selected for download by default.
-    ///
-    /// - parameter bitrate: The bitrate to select, in bps (bits per second)
-    @discardableResult
-    public func use(bitrate: Int64?) -> Self {
-        configuration.requiredBitrate = bitrate
-        return self
-    }
+public enum SessionConfigurationIdentifier: String {
+    case `default` = "com.emp.download.session.background"
 }
-
-extension DownloadTaskType {
-//    public func createNewTask() {
-//        print("✅ No AVAssetDownloadTask prepared, creating new for: \(configuration.identifier)")
-//        // Create a fresh task
-//        let options = configuration.requiredBitrate != nil ? [AVAssetDownloadTaskMinimumRequiredMediaBitrateKey: configuration.requiredBitrate!] : nil
-//
-//        configureTask(with: options, using: configuration) { urlTask, error in
-//            if let error = error {
-//                eventPublishTransmitter.onError(self, progression.destination, error)
-//                return
-//            }
-//
-//            if let urlTask = urlTask {
-//                task = urlTask
-//                sessionManager.delegate[urlTask] = self
-//                print("👍 DownloadTask prepared")
-//                eventPublishTransmitter.onPrepared(self)
-//            }
-//        }
-//    }
-    
-    public func createAndConfigureTask(with options: [String: Any]?, using configuration: Configuration, callback: (AVAssetDownloadTask?, DownloadEventError?) -> Void) {
-        guard let url = configuration.url else {
-            callback(nil, .downloadError(reason: .targetUrlNotFound))
-            return
-        }
-        
-        if #available(iOS 10.0, *) {
-            guard let task = sessionManager
-                .session
-                .makeAssetDownloadTask(asset: AVURLAsset(url: url),
-                                       assetTitle: configuration.identifier,
-                                       assetArtworkData: configuration.artwork,
-                                       options: options) else {
-                                        // This method may return nil if the AVAssetDownloadURLSession has been invalidated.
-                                        callback(nil, .downloadError(reason: .downloadSessionInvalidated))
-                                        return
-            }
-            task.taskDescription = configuration.identifier
-            configureResourceLoader(for: task)
-            callback(task,nil)
-        }
-        else {
-            guard let destination = progression.destination else {
-                callback(nil, .downloadError(reason: .failedToStartTaskWithoutDestination))
-                return
-            }
-            guard let task = sessionManager
-                .session
-                .makeAssetDownloadTask(asset: AVURLAsset(url: url),
-                                       destinationURL: destination,
-                                       options: options) else {
-                                        // This method may return nil if the URLSession has been invalidated
-                                        callback(nil, .downloadError(reason: .downloadSessionInvalidated))
-                                        return
-            }
-            task.taskDescription = configuration.identifier
-            configureResourceLoader(for: task)
-            callback(task,nil)
-        }
-    }
-    
-    public func configureResourceLoader(for task: AVAssetDownloadTask) {
-        if fairplayRequester != nil {
-            if task.urlAsset.resourceLoader.delegate != nil {
-                task.urlAsset.resourceLoader.setDelegate(nil, queue: nil)
-            }
-            let queue = DispatchQueue(label: configuration.identifier + "-offlineFairplayLoader")
-            
-            task.urlAsset.resourceLoader.preloadsEligibleContentKeys = true
-            task.urlAsset
-                .resourceLoader
-                .setDelegate(fairplayRequester, queue: queue)
-        }
-    }
-}
-
-extension DownloadTaskType {
-    public func handle(restoredTask: AVAssetDownloadTask) {
-        print("👍 DownloadTask restored")
-        
-        switch restoredTask.state {
-        case .running:
-            eventPublishTransmitter.onPrepared(self)
-            eventPublishTransmitter.onResumed(self)
-        case .suspended:
-            eventPublishTransmitter.onPrepared(self)
-            eventPublishTransmitter.onSuspended(self)
-        case .canceling:
-            break
-        case .completed:
-            if let error = restoredTask.error {
-                eventPublishTransmitter.onError(self, progression.destination, .downloadError(reason: .completedWithError(error: error)))
-            }
-            else {
-                // Handle completion
-                if let destination = progression.destination {
-                    eventPublishTransmitter.onCompleted(self, destination)
-                }
-                else {
-                    eventPublishTransmitter.onError(self, progression.destination, .downloadError(reason: .completedWithoutValidStorageUrl))
-                }
-            }
-        }
-    }
-}
-
 
 public class SessionManager<Task: DownloadTaskType> {
     /// The underlying session.
@@ -199,8 +75,8 @@ public class SessionManager<Task: DownloadTaskType> {
     ///                                       challenges. `nil` by default.
     ///
     /// - returns: The new `SessionManager` instance.
-    internal init(
-        configuration: URLSessionConfiguration = URLSessionConfiguration.background(withIdentifier: "com.emp.download.session.background"),
+    public init(
+        configuration: URLSessionConfiguration = URLSessionConfiguration.background(withIdentifier: SessionConfigurationIdentifier.default.rawValue),
         delegate: SessionDelegate<Task> = SessionDelegate())
     {
         self.delegate = delegate

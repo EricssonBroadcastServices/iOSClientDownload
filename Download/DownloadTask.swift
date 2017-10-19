@@ -9,22 +9,12 @@
 import Foundation
 import AVFoundation
 
-public protocol DownloadProcess {
-    associatedtype DownloadState
-    
-    func resume()
-    func suspend()
-    func cancel()
-    
-    func use(bitrate: Int64?) -> Self
-    var state: DownloadState { get }
-}
-
 
 public struct Progress {
     /// Current progress measured in [0,1]
     public let current: Double
 }
+
 public final class DownloadTask: DownloadTaskType {
     
     public let eventPublishTransmitter = DownloadEventPublishTransmitter<DownloadTask>()
@@ -62,7 +52,7 @@ public final class DownloadTask: DownloadTaskType {
     }
 }
 
-extension DownloadTask: DownloadProcess {
+extension DownloadTask {
     /// - parameter lazily: `true` will delay creation of new tasks until the user calls `resume()`. `false` will force create the task if none exists.
     @discardableResult
     public func prepare(lazily: Bool = true) -> DownloadTask {
