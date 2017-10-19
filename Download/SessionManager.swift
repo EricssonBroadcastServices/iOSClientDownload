@@ -14,12 +14,12 @@ public enum SessionConfigurationIdentifier: String {
     case `default` = "com.emp.download.session.background"
 }
 
-public class SessionManager<Task: DownloadTaskType> {
+public class SessionManager<T: TaskType> {
     /// The underlying session.
     internal let session: AVAssetDownloadURLSession
     
     /// The session delegate handling all the task and session delegate callbacks.
-    internal(set) public var delegate: SessionDelegate<Task>
+    internal(set) public var delegate: SessionDelegate<T>
     
     
     /// The background completion handler closure provided by the UIApplicationDelegate
@@ -47,7 +47,7 @@ public class SessionManager<Task: DownloadTaskType> {
     /// - returns: The new `SessionManager` instance.
     public init(
         configuration: URLSessionConfiguration = URLSessionConfiguration.background(withIdentifier: SessionConfigurationIdentifier.default.rawValue),
-        delegate: SessionDelegate<Task> = SessionDelegate())
+        delegate: SessionDelegate<T> = SessionDelegate())
     {
         self.delegate = delegate
         self.session = AVAssetDownloadURLSession(configuration: configuration,
@@ -72,9 +72,9 @@ public class SessionManager<Task: DownloadTaskType> {
     //    }
 }
 
-extension SessionManager where Task == DownloadTask {
+extension SessionManager where T == Task {
     @available(iOS 10.0, *)
-    public func download(mediaLocator: URL, assetId: String, artwork artworkData: Data? = nil, using fairplayRequester: DownloadFairplayRequester? = nil) -> Task {
+    public func download(mediaLocator: URL, assetId: String, artwork artworkData: Data? = nil, using fairplayRequester: FairplayRequester? = nil) -> T {
         let configuration = Configuration(identifier: assetId,
                                           url: mediaLocator,
                                           artwork: artworkData)
@@ -85,12 +85,12 @@ extension SessionManager where Task == DownloadTask {
         }
         else {
             print("✅ Created new DownloadTask for: \(assetId)")
-            return DownloadTask(sessionManager: self, configuration: configuration, fairplayRequester: fairplayRequester)
+            return Task(sessionManager: self, configuration: configuration, fairplayRequester: fairplayRequester)
         }
     }
     
     @available(iOS, introduced: 9.0, deprecated: 10.0)
-    public func download(mediaLocator: URL, assetId: String, to destination: URL, using fairplayRequester: DownloadFairplayRequester? = nil) -> Task {
+    public func download(mediaLocator: URL, assetId: String, to destination: URL, using fairplayRequester: FairplayRequester? = nil) -> T {
         let configuration = Configuration(identifier: assetId,
                                           url: mediaLocator,
                                           artwork: nil)
@@ -101,7 +101,7 @@ extension SessionManager where Task == DownloadTask {
         }
         else {
             print("✅ Created new DownloadTask for: \(assetId)")
-            return DownloadTask(sessionManager: self, configuration: configuration, fairplayRequester: fairplayRequester, responseData: responseData)
+            return Task(sessionManager: self, configuration: configuration, fairplayRequester: fairplayRequester, responseData: responseData)
         }
     }
 }

@@ -15,35 +15,35 @@ public struct Progress {
     public let current: Double
 }
 
-public final class DownloadTask: DownloadTaskType {
+public final class Task: TaskType {
     
-    public let eventPublishTransmitter = DownloadEventPublishTransmitter<DownloadTask>()
+    public let eventPublishTransmitter = EventPublishTransmitter<Task>()
     
     public var task: AVAssetDownloadTask?
     public var configuration: Configuration
     public var responseData: ResponseData
-    public var fairplayRequester: DownloadFairplayRequester?
-    public let sessionManager: SessionManager<DownloadTask>
+    public var fairplayRequester: FairplayRequester?
+    public let sessionManager: SessionManager<Task>
     
     internal var urlAsset: AVURLAsset? {
         return task?.urlAsset
     }
     
     
-    public lazy var delegate: DownloadTaskDelegate = { [unowned self] in
-        return DownloadTaskDelegate(task: self)
+    public lazy var delegate: TaskDelegate = { [unowned self] in
+        return TaskDelegate(task: self)
         }()
     
     
     /// New, fresh DownloadTasks
-    public init(sessionManager: SessionManager<DownloadTask>, configuration: Configuration, fairplayRequester: DownloadFairplayRequester? = nil, responseData: ResponseData = ResponseData()) {
+    public init(sessionManager: SessionManager<Task>, configuration: Configuration, fairplayRequester: FairplayRequester? = nil, responseData: ResponseData = ResponseData()) {
         self.sessionManager = sessionManager
         self.configuration = configuration
         self.fairplayRequester = fairplayRequester
         self.responseData = responseData
     }
     
-    public init(restoredTask: AVAssetDownloadTask, sessionManager: SessionManager<DownloadTask>, configuration: Configuration, fairplayRequester: DownloadFairplayRequester? = nil, responseData: ResponseData = ResponseData()) {
+    public init(restoredTask: AVAssetDownloadTask, sessionManager: SessionManager<Task>, configuration: Configuration, fairplayRequester: FairplayRequester? = nil, responseData: ResponseData = ResponseData()) {
         self.task = restoredTask
         self.sessionManager = sessionManager
         self.configuration = configuration
@@ -52,10 +52,10 @@ public final class DownloadTask: DownloadTaskType {
     }
 }
 
-extension DownloadTask {
+extension Task {
     /// - parameter lazily: `true` will delay creation of new tasks until the user calls `resume()`. `false` will force create the task if none exists.
     @discardableResult
-    public func prepare(lazily: Bool = true) -> DownloadTask {
+    public func prepare(lazily: Bool = true) -> Task {
         guard let task = task else {
             restoreOrCreate(forceNew: !lazily)
             return self
@@ -158,7 +158,7 @@ extension DownloadTask {
     //    }
 }
 
-extension DownloadTask {
+extension Task {
     /// Returns currently downloaded subtitles
     @available(iOS 10.0, *)
     public var localSubtitles: [MediaOption] {
@@ -178,6 +178,6 @@ extension DownloadTask {
     }
 }
 
-extension DownloadTask: DownloadEventPublisher {
+extension Task: EventPublisher {
     public typealias DownloadEventError = DownloadError
 }

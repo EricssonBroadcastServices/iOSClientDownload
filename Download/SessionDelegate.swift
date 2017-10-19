@@ -9,16 +9,16 @@
 import Foundation
 import AVFoundation
 
-public class SessionDelegate<Task: DownloadTaskType>: NSObject, AVAssetDownloadDelegate {
+public class SessionDelegate<T: TaskType>: NSObject, AVAssetDownloadDelegate {
     
     /// Overrides default behavior for URLSessionDelegate method `urlSessionDidFinishEvents(forBackgroundURLSession:)`.
     internal var sessionDidFinishEventsForBackgroundURLSession: ((URLSession) -> Void)?
     
-    private var requests: [Int: Task] = [:]
+    private var requests: [Int: T] = [:]
     private let lock = NSLock()
     
     /// Access the task delegate for the specified asset identifier in a thread-safe manner.
-    public subscript(identifier: String) -> Task? {
+    public subscript(identifier: String) -> T? {
         get {
             lock.lock() ; defer { lock.unlock() }
             requests.forEach{ print("📍 Active DownloadTask \($0.value.configuration.identifier)") }
@@ -27,7 +27,7 @@ public class SessionDelegate<Task: DownloadTaskType>: NSObject, AVAssetDownloadD
     }
     
     /// Access the task delegate for the specified task in a thread-safe manner.
-    public subscript(task: AVAssetDownloadTask) -> Task? {
+    public subscript(task: AVAssetDownloadTask) -> T? {
         get {
             lock.lock() ; defer { lock.unlock() }
             return requests[task.taskIdentifier]

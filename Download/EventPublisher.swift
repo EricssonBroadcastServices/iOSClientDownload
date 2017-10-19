@@ -1,5 +1,5 @@
 //
-//  DownloadEventPublisher.swift
+//  EventPublisher.swift
 //  Download
 //
 //  Created by Fredrik Sjöberg on 2017-09-30.
@@ -8,29 +8,10 @@
 
 import Foundation
 
-public class DownloadEventPublishTransmitter<Task: DownloadEventPublisher> {
-    public var onPrepared: (Task) -> Void = { _ in }
-    public var onSuspended: (Task) -> Void = { _ in }
-    public var onResumed: (Task) -> Void = { _ in }
-    public var onCanceled: (Task, URL) -> Void = { _ in }
-    public var onCompleted: (Task, URL) -> Void = { _ in }
-    public var onProgress: (Task, Progress) -> Void = { _ in }
-    public var onError: (Task, URL?, Task.DownloadEventError) -> Void = { _ in }
-    public var onPlaybackReady: (Task, URL) -> Void = { _ in }
-    public var onShouldDownloadMediaOption: ((Task, AdditionalMedia) -> MediaOption?) = { _ in return nil }
-    public var onDownloadingMediaOption: (Task, MediaOption) -> Void = { _ in }
-    
-    public init() {
-        
-    }
-}
-
-
-
-public protocol DownloadEventPublisher {
+public protocol EventPublisher {
     associatedtype DownloadEventError: DownloadErrorConvertible
     
-    var eventPublishTransmitter: DownloadEventPublishTransmitter<Self> { get }
+    var eventPublishTransmitter: EventPublishTransmitter<Self> { get }
     
     func onPrepared(callback: @escaping (Self) -> Void) -> Self
     
@@ -53,7 +34,7 @@ public protocol DownloadEventPublisher {
     func onDownloadingMediaOption(callback: @escaping (Self, MediaOption) -> Void) -> Self
 }
 
-extension DownloadEventPublisher {
+extension EventPublisher {
     
     @discardableResult
     public func onPrepared(callback: @escaping (Self) -> Void) -> Self {

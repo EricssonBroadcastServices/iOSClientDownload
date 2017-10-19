@@ -9,15 +9,15 @@
 import Foundation
 import AVFoundation
 
-public class DownloadTaskDelegate<Task: DownloadTaskType>: NSObject {
-    internal var downloadTask: Task?
+public class TaskDelegate<T: TaskType>: NSObject {
+    internal var downloadTask: T?
     
-    public init(task: Task) {
+    public init(task: T) {
         downloadTask = task
     }
 }
 
-extension DownloadTaskDelegate {
+extension TaskDelegate {
     internal func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         guard let downloadTask = downloadTask else {
             return
@@ -74,7 +74,7 @@ extension DownloadTaskDelegate {
         }
     }
     
-    private func handleOnCompletion(error: Error, for downloadTask: Task) {
+    private func handleOnCompletion(error: Error, for downloadTask: T) {
         if let nsError = error as? NSError, nsError.domain == NSURLErrorDomain, nsError.code == NSURLErrorCancelled {
             handleCancellation(task: downloadTask)
         }
@@ -84,7 +84,7 @@ extension DownloadTaskDelegate {
         }
     }
     
-    private func handleCancellation(task: Task) {
+    private func handleCancellation(task: T) {
         guard let destination = task.responseData.destination else {
             print("🚨 DownloadTask cancelled. ⚠️ ", DownloadError.noStoragePathOnCancel.localizedDescription)
             task.eventPublishTransmitter.onError(task, task.responseData.destination, .downloadError(reason: .noStoragePathOnCancel))
@@ -96,7 +96,7 @@ extension DownloadTaskDelegate {
     }
 }
 
-extension DownloadTaskDelegate {
+extension TaskDelegate {
     /// NOTE: Will also be called when a partially downloaded asset is cancelled by the user
     /// Also called onError?
     ///

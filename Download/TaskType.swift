@@ -9,12 +9,12 @@
 import Foundation
 import AVFoundation
 
-public protocol DownloadTaskType: class, DownloadEventPublisher {
+public protocol TaskType: class, EventPublisher {
     var configuration: Configuration { get }
     var responseData: ResponseData { get }
     var sessionManager: SessionManager<Self> { get }
-    var delegate: DownloadTaskDelegate<Self> { get }
-    var fairplayRequester: DownloadFairplayRequester? { get }
+    var delegate: TaskDelegate<Self> { get }
+    var fairplayRequester: FairplayRequester? { get }
     var task: AVAssetDownloadTask? { get }
     
     associatedtype DownloadState
@@ -27,7 +27,7 @@ public protocol DownloadTaskType: class, DownloadEventPublisher {
     var state: DownloadState { get }
 }
 
-extension DownloadTaskType {
+extension TaskType {
     /// The lowest media bitrate greater than or equal to this value will be selected. If no suitable media bitrate is found, the highest media bitrate will be selected. If this option is not specified, the highest media bitrate will be selected for download by default.
     ///
     /// - parameter bitrate: The bitrate to select, in bps (bits per second)
@@ -38,7 +38,7 @@ extension DownloadTaskType {
     }
 }
 
-extension DownloadTaskType {
+extension TaskType {
     public func createAndConfigureTask(with options: [String: Any]?, using configuration: Configuration, callback: (AVAssetDownloadTask?, DownloadEventError?) -> Void) {
         guard let url = configuration.url else {
             callback(nil, .downloadError(reason: .targetUrlNotFound))
@@ -95,7 +95,7 @@ extension DownloadTaskType {
     }
 }
 
-extension DownloadTaskType {
+extension TaskType {
     public func handle(restoredTask: AVAssetDownloadTask) {
         print("👍 DownloadTask restored")
         
