@@ -13,7 +13,7 @@ public class Configuration {
     public var url: URL?
     public let artwork: Data?
     
-    internal(set) public var requiredBitrate: Int64?
+    public var requiredBitrate: Int64?
     
     public init(identifier: String, url: URL? = nil, artwork: Data? = nil) {
         self.identifier = identifier
