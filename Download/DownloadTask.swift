@@ -21,7 +21,7 @@ public final class DownloadTask: DownloadTaskType {
     
     public var task: AVAssetDownloadTask?
     public var configuration: Configuration
-    public var progression: Progression
+    public var responseData: ResponseData
     public var fairplayRequester: DownloadFairplayRequester?
     public let sessionManager: SessionManager<DownloadTask>
     
@@ -36,19 +36,19 @@ public final class DownloadTask: DownloadTaskType {
     
     
     /// New, fresh DownloadTasks
-    public init(sessionManager: SessionManager<DownloadTask>, configuration: Configuration, fairplayRequester: DownloadFairplayRequester? = nil, progression: Progression = Progression()) {
+    public init(sessionManager: SessionManager<DownloadTask>, configuration: Configuration, fairplayRequester: DownloadFairplayRequester? = nil, responseData: ResponseData = ResponseData()) {
         self.sessionManager = sessionManager
         self.configuration = configuration
         self.fairplayRequester = fairplayRequester
-        self.progression = progression
+        self.responseData = responseData
     }
     
-    public init(restoredTask: AVAssetDownloadTask, sessionManager: SessionManager<DownloadTask>, configuration: Configuration, fairplayRequester: DownloadFairplayRequester? = nil, progression: Progression = Progression()) {
+    public init(restoredTask: AVAssetDownloadTask, sessionManager: SessionManager<DownloadTask>, configuration: Configuration, fairplayRequester: DownloadFairplayRequester? = nil, responseData: ResponseData = ResponseData()) {
         self.task = restoredTask
         self.sessionManager = sessionManager
         self.configuration = configuration
         self.fairplayRequester = fairplayRequester
-        self.progression = progression
+        self.responseData = responseData
     }
 }
 
@@ -83,7 +83,7 @@ extension DownloadTask {
                     let options = weakSelf.configuration.requiredBitrate != nil ? [AVAssetDownloadTaskMinimumRequiredMediaBitrateKey: weakSelf.configuration.requiredBitrate!] : nil
                     weakSelf.createAndConfigureTask(with: options, using: weakSelf.configuration) { urlTask, error in
                         if let error = error {
-                            weakSelf.eventPublishTransmitter.onError(weakSelf, weakSelf.progression.destination, error)
+                            weakSelf.eventPublishTransmitter.onError(weakSelf, weakSelf.responseData.destination, error)
                             return
                         }
                         

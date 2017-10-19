@@ -11,7 +11,7 @@ import AVFoundation
 
 public protocol DownloadTaskType: class, DownloadEventPublisher {
     var configuration: Configuration { get }
-    var progression: Progression { get }
+    var responseData: ResponseData { get }
     var sessionManager: SessionManager<Self> { get }
     var delegate: DownloadTaskDelegate<Self> { get }
     var fairplayRequester: DownloadFairplayRequester? { get }
@@ -61,7 +61,7 @@ extension DownloadTaskType {
             callback(task,nil)
         }
         else {
-            guard let destination = progression.destination else {
+            guard let destination = responseData.destination else {
                 callback(nil, .downloadError(reason: .failedToStartTaskWithoutDestination))
                 return
             }
@@ -110,15 +110,15 @@ extension DownloadTaskType {
             break
         case .completed:
             if let error = restoredTask.error {
-                eventPublishTransmitter.onError(self, progression.destination, .downloadError(reason: .completedWithError(error: error)))
+                eventPublishTransmitter.onError(self, responseData.destination, .downloadError(reason: .completedWithError(error: error)))
             }
             else {
                 // Handle completion
-                if let destination = progression.destination {
+                if let destination = responseData.destination {
                     eventPublishTransmitter.onCompleted(self, destination)
                 }
                 else {
-                    eventPublishTransmitter.onError(self, progression.destination, .downloadError(reason: .completedWithoutValidStorageUrl))
+                    eventPublishTransmitter.onError(self, responseData.destination, .downloadError(reason: .completedWithoutValidStorageUrl))
                 }
             }
         }

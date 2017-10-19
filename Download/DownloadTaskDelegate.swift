@@ -29,7 +29,7 @@ extension DownloadTaskDelegate {
         }
         else {
             // Completed with success
-            guard let location = downloadTask.progression.destination else {
+            guard let location = downloadTask.responseData.destination else {
                 // Error when no storage url is found
                 print("✅ DownloadTask completed. 🚨 ", DownloadError.completedWithoutValidStorageUrl.localizedDescription)
                 downloadTask.eventPublishTransmitter.onError(downloadTask, nil, .downloadError(reason: .completedWithoutValidStorageUrl))
@@ -37,7 +37,7 @@ extension DownloadTaskDelegate {
             }
             
             // Success
-            guard let resolvedMedia = downloadTask.progression.resolvedMediaSelection else {
+            guard let resolvedMedia = downloadTask.responseData.resolvedMediaSelection else {
                 // 1. No more media available. Trigger onCompleted
                 print("✅ DownloadTask completed.")
                 downloadTask.eventPublishTransmitter.onCompleted(downloadTask, location)
@@ -57,7 +57,7 @@ extension DownloadTaskDelegate {
                 downloadTask.createAndConfigureTask(with: options, using: downloadTask.configuration) { [weak self] urlTask, error in
                     guard let updatedTask = self?.downloadTask else { return }
                     guard error == nil else {
-                        updatedTask.eventPublishTransmitter.onError(updatedTask, updatedTask.progression.destination, error!)
+                        updatedTask.eventPublishTransmitter.onError(updatedTask, updatedTask.responseData.destination, error!)
                         return
                     }
                     updatedTask.eventPublishTransmitter.onDownloadingMediaOption(updatedTask, newSelection)
@@ -80,17 +80,17 @@ extension DownloadTaskDelegate {
         }
         else {
             print("🚨 DownloadTask completed with error:",error.localizedDescription)
-            downloadTask.eventPublishTransmitter.onError(downloadTask, downloadTask.progression.destination, .downloadError(reason: .completedWithError(error: error)))
+            downloadTask.eventPublishTransmitter.onError(downloadTask, downloadTask.responseData.destination, .downloadError(reason: .completedWithError(error: error)))
         }
     }
     
     private func handleCancellation(task: Task) {
-        guard let destination = task.progression.destination else {
+        guard let destination = task.responseData.destination else {
             print("🚨 DownloadTask cancelled. ⚠️ ", DownloadError.noStoragePathOnCancel.localizedDescription)
-            task.eventPublishTransmitter.onError(task, task.progression.destination, .downloadError(reason: .noStoragePathOnCancel))
+            task.eventPublishTransmitter.onError(task, task.responseData.destination, .downloadError(reason: .noStoragePathOnCancel))
             return
         }
-        task.progression.destination = nil
+        task.responseData.destination = nil
         print("✅ DownloadTask cancelled.",task.configuration.identifier)
         task.eventPublishTransmitter.onCanceled(task, destination)
     }
@@ -113,7 +113,7 @@ extension DownloadTaskDelegate {
         guard let downloadTask = downloadTask else { return }
         
         // This is the location to save as bookmark data
-        downloadTask.progression.destination = location
+        downloadTask.responseData.destination = location
     }
     
     @available(iOS 9.0, *)
@@ -134,6 +134,6 @@ extension DownloadTaskDelegate {
     @available(iOS 9.0, *)
     internal func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didResolve resolvedMediaSelection: AVMediaSelection) {
         guard let downloadTask = downloadTask else { return }
-        downloadTask.progression.resolvedMediaSelection = resolvedMediaSelection
+        downloadTask.responseData.resolvedMediaSelection = resolvedMediaSelection
     }
 }

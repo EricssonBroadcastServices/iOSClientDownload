@@ -23,7 +23,7 @@ public class Configuration {
     }
 }
 
-public class Progression {
+public class ResponseData {
     /// destination.bookmarkData()
     /// Bookmark data should be used when persisting this url to disk
     ///
@@ -124,14 +124,14 @@ extension SessionManager where Task == DownloadTask {
         let configuration = Configuration(identifier: assetId,
                                           url: mediaLocator,
                                           artwork: nil)
-        let progression = Progression(destination: destination)
+        let responseData = ResponseData(destination: destination)
         if let currentTask = delegate[assetId] {
             print("♻️ Retrieved DownloadTask associated with request for: \(assetId)")
             return currentTask
         }
         else {
             print("✅ Created new DownloadTask for: \(assetId)")
-            return DownloadTask(sessionManager: self, configuration: configuration, fairplayRequester: fairplayRequester, progression: progression)
+            return DownloadTask(sessionManager: self, configuration: configuration, fairplayRequester: fairplayRequester, responseData: responseData)
         }
     }
 }
