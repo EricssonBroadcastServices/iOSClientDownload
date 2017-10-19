@@ -9,25 +9,25 @@
 import Foundation
 import AVFoundation
 
-public class SessionDelegate: NSObject {
+public class SessionDelegate<T: TaskType>: NSObject, AVAssetDownloadDelegate {
     
     /// Overrides default behavior for URLSessionDelegate method `urlSessionDidFinishEvents(forBackgroundURLSession:)`.
     internal var sessionDidFinishEventsForBackgroundURLSession: ((URLSession) -> Void)?
     
-    private var requests: [Int: DownloadTask] = [:]
+    private var requests: [Int: T] = [:]
     private let lock = NSLock()
     
     /// Access the task delegate for the specified asset identifier in a thread-safe manner.
-    internal subscript(identifier: String) -> DownloadTask? {
+    public subscript(identifier: String) -> T? {
         get {
             lock.lock() ; defer { lock.unlock() }
-            requests.forEach{ print("📍 Active DownloadTask \($0.value.configuration.assetId)") }
-            return requests.filter{ $0.value.configuration.assetId == identifier }.first?.value
+            requests.forEach{ print("📍 Active DownloadTask \($0.value.configuration.identifier)") }
+            return requests.filter{ $0.value.configuration.identifier == identifier }.first?.value
         }
     }
     
     /// Access the task delegate for the specified task in a thread-safe manner.
-    internal subscript(task: AVAssetDownloadTask) -> DownloadTask? {
+    public subscript(task: AVAssetDownloadTask) -> T? {
         get {
             lock.lock() ; defer { lock.unlock() }
             return requests[task.taskIdentifier]
@@ -46,9 +46,8 @@ public class SessionDelegate: NSObject {
     public override init() {
         super.init()
     }
-}
-
-extension SessionDelegate: AVAssetDownloadDelegate {
+    
+    // MARK: - AVAssetDownloadDelegate
     
     /// NOTE: Will also be called when a partially downloaded asset is cancelled by the user
     /// Also called onError?
@@ -74,9 +73,8 @@ extension SessionDelegate: AVAssetDownloadDelegate {
             delegate.urlSession(session, assetDownloadTask: assetDownloadTask, didResolve: resolvedMediaSelection)
         }
     }
-}
-
-extension SessionDelegate: URLSessionTaskDelegate {
+    
+    // MARK: - URLSessionTaskDelegate
     @available(iOS 11.0, *)
     public func urlSession(_ session: URLSession, task: URLSessionTask, willBeginDelayedRequest request: URLRequest, completionHandler: @escaping (URLSession.DelayedRequestDisposition, URLRequest?) -> Swift.Void) {
         
@@ -119,9 +117,8 @@ extension SessionDelegate: URLSessionTaskDelegate {
             self[assetDownloadTask] = nil
         }
     }
-}
-
-extension SessionDelegate: URLSessionDelegate {
+    
+    // MARK: - URLSessionDelegate
     public func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
         print("🚨 URLSession invalidated: \(error?.localizedDescription)")
         // TODO: Invalidated sessions should probably be communicated to the end user somehow. Do we provide an error callback setable from the Manager/Delegate?

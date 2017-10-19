@@ -11,6 +11,7 @@ NO RELEASE YET
 * `EMP-10445` Download functionality with Session management.
 * `EMP-10474` Persist and retrieve `FairPlay` content keys in download and offline scenarios.
 * `EMP-10478` Preparation of `DownloadTask`s now occur once `resume()` is called.
+* `SessionManager` manages generic `DownloadTaskType` allowing for easy extensibility.
 
 #### Changes
 * `EMP-10486` Removed `Downloader` in favour of using `SessionManager` directly.
