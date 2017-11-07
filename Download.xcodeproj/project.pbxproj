@@ -32,6 +32,7 @@
 		76842FD71F62979A00F1A0D3 /* update_dependency_graph.rb in Resources */ = {isa = PBXBuildFile; fileRef = 76842FD31F62979A00F1A0D3 /* update_dependency_graph.rb */; };
 		76842FD81F62979A00F1A0D3 /* Appfile in Resources */ = {isa = PBXBuildFile; fileRef = 76842FD41F62979A00F1A0D3 /* Appfile */; };
 		76842FD91F62979A00F1A0D3 /* Fastfile in Resources */ = {isa = PBXBuildFile; fileRef = 76842FD51F62979A00F1A0D3 /* Fastfile */; };
+		769FE94F1FB21AC900F44B23 /* DownloadAnalyticsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 769FE94E1FB21AC900F44B23 /* DownloadAnalyticsProvider.swift */; };
 		76AD6FA81F821F960084524A /* FileManager+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76AD6FA71F821F960084524A /* FileManager+Extensions.swift */; };
 /* End PBXBuildFile section */
 
@@ -77,6 +78,7 @@
 		76842FD31F62979A00F1A0D3 /* update_dependency_graph.rb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.ruby; path = update_dependency_graph.rb; sourceTree = "<group>"; };
 		76842FD41F62979A00F1A0D3 /* Appfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Appfile; sourceTree = "<group>"; };
 		76842FD51F62979A00F1A0D3 /* Fastfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Fastfile; sourceTree = "<group>"; };
+		769FE94E1FB21AC900F44B23 /* DownloadAnalyticsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadAnalyticsProvider.swift; sourceTree = "<group>"; };
 		76AD6FA71F821F960084524A /* FileManager+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FileManager+Extensions.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -135,6 +137,7 @@
 				76782EDC1F801CD0008878F6 /* SessionManager.swift */,
 				76782EDE1F801CD9008878F6 /* SessionDelegate.swift */,
 				761DA2081F9890140002A171 /* Configuration.swift */,
+				769FE94E1FB21AC900F44B23 /* DownloadAnalyticsProvider.swift */,
 				761DA20A1F9890320002A171 /* ResponseData.swift */,
 				76782EE01F801D59008878F6 /* DownloadError.swift */,
 				766502ED1F98E11F009A5BFE /* EventPublisher.swift */,
@@ -295,6 +298,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				76782ED91F801CB9008878F6 /* Task.swift in Sources */,
+				769FE94F1FB21AC900F44B23 /* DownloadAnalyticsProvider.swift in Sources */,
 				76782EE71F801DA9008878F6 /* MediaOption.swift in Sources */,
 				76AD6FA81F821F960084524A /* FileManager+Extensions.swift in Sources */,
 				766502EE1F98E120009A5BFE /* EventPublisher.swift in Sources */,

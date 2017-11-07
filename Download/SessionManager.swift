@@ -21,6 +21,7 @@ public class SessionManager<T: TaskType> {
     /// The session delegate handling all the task and session delegate callbacks.
     internal(set) public var delegate: SessionDelegate<T>
     
+    public var analyticsProviderGenerator: (() -> DownloadAnalyticsProvider)? = nil
     
     /// The background completion handler closure provided by the UIApplicationDelegate
     /// `application:handleEventsForBackgroundURLSession:completionHandler:` method. By setting the background
@@ -70,6 +71,13 @@ public class SessionManager<T: TaskType> {
     //        sessionConfiguration.allowsCellularAccess = cellularAccess
     //        return self
     //    }
+}
+
+extension SessionManager where T == Task {
+    public func analytics(callback: @escaping () -> DownloadAnalyticsProvider) -> Self {
+        analyticsProviderGenerator = callback
+        return self
+    }
 }
 
 extension SessionManager where T == Task {
