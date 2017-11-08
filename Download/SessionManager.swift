@@ -14,14 +14,76 @@ public enum SessionConfigurationIdentifier: String {
     case `default` = "com.emp.download.session.background"
 }
 
+public protocol AnalyticsConnectorType {
+    associatedtype DownloadTask: TaskType
+    
+    func downloadPausedEvent(callback: @escaping (DownloadTask) -> Void)
+    func downloadResumedEvent(callback: @escaping (DownloadTask) -> Void)
+    func downloadCancelledEvent(callback: @escaping (DownloadTask) -> Void)
+    func downloadStoppedEvent(callback: @escaping (DownloadTask) -> Void)
+    func downloadCompletedEvent(callback: @escaping (DownloadTask) -> Void)
+    func downloadErrorEvent(callback: @escaping (DownloadTask, DownloadTask.DownloadEventError) -> Void)
+}
+
+open class AnalyticsConnector<T: TaskType, Provider>: AnalyticsConnectorType {
+    public var provider: Provider
+    public init(provider: Provider) {
+        self.provider = provider
+    }
+    
+    // Playback.DownloadStarted, VideoLength, DownloadedSize, MediaSize, AssetId
+    public var onDownloadStarted: (T) -> Void = { _ in }
+    open func downloadStartedEvent(callback: @escaping (T) -> Void) {
+        onDownloadStarted = callback
+    }
+    
+    // Playback.DownloadPaused, DownloadedSize, MediaSize, AssetId
+    public var onDownloadPaused: (T) -> Void = { _ in }
+    open func downloadPausedEvent(callback: @escaping (T) -> Void) {
+        onDownloadPaused = callback
+    }
+    
+    // Playback.DownloadResumed, DownloadedSize, MediaSize, AssetId
+    public var onDownloadResumed: (T) -> Void = { _ in }
+    open func downloadResumedEvent(callback: @escaping (T) -> Void) {
+        onDownloadResumed = callback
+    }
+    
+    // Playback.DownloadCancelled, DownloadedSize, MediaSize, AssetId, OffsetTime
+    public var onDownloadCancelled: (T) -> Void = { _ in }
+    open func downloadCancelledEvent(callback: @escaping (T) -> Void) {
+        onDownloadCancelled = callback
+    }
+    
+    // Playback.DownloadStopped, DownloadedSize, MediaSize, AssetId, OffsetTime
+    public  var onDownloadStopped: (T) -> Void = { _ in }
+    open func downloadStoppedEvent(callback: @escaping (T) -> Void) {
+        onDownloadStopped = callback
+    }
+    
+    // Playback.DownloadCompleted, DownloadedSize, MediaSize, AssetId, OffsetTime
+    public var onDownloadCompleted: (T) -> Void = { _ in }
+    open func downloadCompletedEvent(callback: @escaping (T) -> Void) {
+        onDownloadCompleted = callback
+    }
+    
+    
+    /// Triggered if the download process encounters an error during its lifetime
+    ///
+    /// - parameter task: `ExposureDownloadTask` broadcasting the event
+    /// - parameter error: `ExposureError` causing the event to fire
+    public var onDownloadError: (T, T.DownloadEventError) -> Void = { _ in }
+    open func downloadErrorEvent(callback: @escaping (T, T.DownloadEventError) -> Void) {
+        onDownloadError = callback
+    }
+}
+
 public class SessionManager<T: TaskType> {
     /// The underlying session.
     internal let session: AVAssetDownloadURLSession
     
     /// The session delegate handling all the task and session delegate callbacks.
     internal(set) public var delegate: SessionDelegate<T>
-    
-    public var analyticsProviderGenerator: (() -> DownloadAnalyticsProvider)? = nil
     
     /// The background completion handler closure provided by the UIApplicationDelegate
     /// `application:handleEventsForBackgroundURLSession:completionHandler:` method. By setting the background
@@ -61,9 +123,9 @@ public class SessionManager<T: TaskType> {
         }
     }
     
-    deinit {
-        session.finishTasksAndInvalidate()
-    }
+//    deinit {
+//        session.finishTasksAndInvalidate()
+//    }
     
     
     //    @discardableResult
@@ -74,15 +136,8 @@ public class SessionManager<T: TaskType> {
 }
 
 extension SessionManager where T == Task {
-    public func analytics(callback: @escaping () -> DownloadAnalyticsProvider) -> Self {
-        analyticsProviderGenerator = callback
-        return self
-    }
-}
-
-extension SessionManager where T == Task {
     @available(iOS 10.0, *)
-    public func download(mediaLocator: URL, assetId: String, artwork artworkData: Data? = nil, using fairplayRequester: DownloadFairplayRequester? = nil) -> T {
+    public func download(mediaLocator: URL, assetId: String, artwork artworkData: Data? = nil, using fairplayRequester: DownloadFairplayRequester? = nil, analyticsProvider: TaskAnalyticsProvider? = nil) -> T {
         let configuration = Configuration(identifier: assetId,
                                           url: mediaLocator,
                                           artwork: artworkData)
@@ -93,12 +148,15 @@ extension SessionManager where T == Task {
         }
         else {
             print("✅ Created new DownloadTask for: \(assetId)")
-            return Task(sessionManager: self, configuration: configuration, fairplayRequester: fairplayRequester)
+            return Task(sessionManager: self,
+                        configuration: configuration,
+                        fairplayRequester: fairplayRequester,
+                        analyticsProvider: analyticsProvider)
         }
     }
     
     @available(iOS, introduced: 9.0, deprecated: 10.0)
-    public func download(mediaLocator: URL, assetId: String, to destination: URL, using fairplayRequester: DownloadFairplayRequester? = nil) -> T {
+    public func download(mediaLocator: URL, assetId: String, to destination: URL, using fairplayRequester: DownloadFairplayRequester? = nil, analyticsProvider: TaskAnalyticsProvider? = nil) -> T {
         let configuration = Configuration(identifier: assetId,
                                           url: mediaLocator,
                                           artwork: nil)
@@ -109,7 +167,11 @@ extension SessionManager where T == Task {
         }
         else {
             print("✅ Created new DownloadTask for: \(assetId)")
-            return Task(sessionManager: self, configuration: configuration, fairplayRequester: fairplayRequester, responseData: responseData)
+            return Task(sessionManager: self,
+                        configuration: configuration,
+                        fairplayRequester: fairplayRequester,
+                        analyticsProvider: analyticsProvider,
+                        responseData: responseData)
         }
     }
 }

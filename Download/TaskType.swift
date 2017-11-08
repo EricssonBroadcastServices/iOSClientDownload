@@ -10,11 +10,17 @@ import Foundation
 import AVFoundation
 
 public protocol TaskType: class, EventPublisher {
+    associatedtype AnalyticsProvider
+    
     var configuration: Configuration { get }
     var responseData: ResponseData { get }
     var sessionManager: SessionManager<Self> { get }
     var delegate: TaskDelegate<Self> { get }
     var fairplayRequester: DownloadFairplayRequester? { get }
+    var eventPublishTransmitter: EventPublishTransmitter<Self> { get }
+    
+    var analyticsConnector: AnalyticsConnector<Self, AnalyticsProvider> { get }
+    
     var task: AVAssetDownloadTask? { get }
     
     associatedtype DownloadState
