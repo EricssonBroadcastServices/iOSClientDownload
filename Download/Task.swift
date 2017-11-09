@@ -15,9 +15,6 @@ public struct Progress {
     public let current: Double
 }
 
-public protocol TaskAnalyticsProvider {
-    
-}
 
 public final class Task: TaskType {
     public let eventPublishTransmitter = EventPublishTransmitter<Task>()
@@ -27,7 +24,7 @@ public final class Task: TaskType {
     public var responseData: ResponseData
     public var fairplayRequester: DownloadFairplayRequester?
     public let sessionManager: SessionManager<Task>
-    public var analyticsConnector: AnalyticsConnector<Task, TaskAnalyticsProvider?>
+    public var analyticsConnector: TaskAnalyticsConnector
     
     internal var urlAsset: AVURLAsset? {
         return task?.urlAsset
@@ -44,7 +41,7 @@ public final class Task: TaskType {
         self.sessionManager = sessionManager
         self.configuration = configuration
         self.fairplayRequester = fairplayRequester
-        self.analyticsConnector = AnalyticsConnector(provider: analyticsProvider)
+        self.analyticsConnector = TaskAnalyticsConnector(provider: analyticsProvider)
         self.responseData = responseData
     }
     
@@ -53,7 +50,7 @@ public final class Task: TaskType {
         self.sessionManager = sessionManager
         self.configuration = configuration
         self.fairplayRequester = fairplayRequester
-        self.analyticsConnector = AnalyticsConnector(provider: analyticsProvider)
+        self.analyticsConnector = TaskAnalyticsConnector(provider: analyticsProvider)
         self.responseData = responseData
     }
 }

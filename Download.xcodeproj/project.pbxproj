@@ -10,8 +10,7 @@
 		761DA2071F988C700002A171 /* TaskType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761DA2061F988C700002A171 /* TaskType.swift */; };
 		761DA2091F9890140002A171 /* Configuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761DA2081F9890140002A171 /* Configuration.swift */; };
 		761DA20B1F9890320002A171 /* ResponseData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761DA20A1F9890320002A171 /* ResponseData.swift */; };
-		762804961FB36B3100DB54CC /* AnalyticsConnector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 762804951FB36B3100DB54CC /* AnalyticsConnector.swift */; };
-		762804981FB36B4400DB54CC /* AnalyticsConnectorType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 762804971FB36B4400DB54CC /* AnalyticsConnectorType.swift */; };
+		7628049A1FB45A2A00DB54CC /* TaskAnalyticsConnector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 762804991FB45A2A00DB54CC /* TaskAnalyticsConnector.swift */; };
 		766502EE1F98E120009A5BFE /* EventPublisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 766502ED1F98E11F009A5BFE /* EventPublisher.swift */; };
 		766502F21F98E1A0009A5BFE /* EventPublishTransmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 766502F11F98E1A0009A5BFE /* EventPublishTransmitter.swift */; };
 		76782ED91F801CB9008878F6 /* Task.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76782ED81F801CB9008878F6 /* Task.swift */; };
@@ -51,8 +50,7 @@
 		761DA2061F988C700002A171 /* TaskType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskType.swift; sourceTree = "<group>"; };
 		761DA2081F9890140002A171 /* Configuration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Configuration.swift; sourceTree = "<group>"; };
 		761DA20A1F9890320002A171 /* ResponseData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseData.swift; sourceTree = "<group>"; };
-		762804951FB36B3100DB54CC /* AnalyticsConnector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsConnector.swift; sourceTree = "<group>"; };
-		762804971FB36B4400DB54CC /* AnalyticsConnectorType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsConnectorType.swift; sourceTree = "<group>"; };
+		762804991FB45A2A00DB54CC /* TaskAnalyticsConnector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskAnalyticsConnector.swift; sourceTree = "<group>"; };
 		766502ED1F98E11F009A5BFE /* EventPublisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventPublisher.swift; sourceTree = "<group>"; };
 		766502F11F98E1A0009A5BFE /* EventPublishTransmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventPublishTransmitter.swift; sourceTree = "<group>"; };
 		7672041A1F82CE14006D85B0 /* Cartfile.resolved */ = {isa = PBXFileReference; lastKnownFileType = text; path = Cartfile.resolved; sourceTree = SOURCE_ROOT; };
@@ -135,12 +133,11 @@
 				76842FB11F62969200F1A0D3 /* Download.h */,
 				76842FB21F62969200F1A0D3 /* Info.plist */,
 				76782ED81F801CB9008878F6 /* Task.swift */,
+				762804991FB45A2A00DB54CC /* TaskAnalyticsConnector.swift */,
 				76782EDA1F801CC2008878F6 /* TaskDelegate.swift */,
 				76782EDC1F801CD0008878F6 /* SessionManager.swift */,
 				76782EDE1F801CD9008878F6 /* SessionDelegate.swift */,
 				761DA2081F9890140002A171 /* Configuration.swift */,
-				762804951FB36B3100DB54CC /* AnalyticsConnector.swift */,
-				762804971FB36B4400DB54CC /* AnalyticsConnectorType.swift */,
 				761DA20A1F9890320002A171 /* ResponseData.swift */,
 				76782EE01F801D59008878F6 /* DownloadError.swift */,
 				766502ED1F98E11F009A5BFE /* EventPublisher.swift */,
@@ -301,17 +298,16 @@
 			buildActionMask = 2147483647;
 			files = (
 				76782ED91F801CB9008878F6 /* Task.swift in Sources */,
-				762804961FB36B3100DB54CC /* AnalyticsConnector.swift in Sources */,
 				76782EE71F801DA9008878F6 /* MediaOption.swift in Sources */,
 				76AD6FA81F821F960084524A /* FileManager+Extensions.swift in Sources */,
 				766502EE1F98E120009A5BFE /* EventPublisher.swift in Sources */,
 				766502F21F98E1A0009A5BFE /* EventPublishTransmitter.swift in Sources */,
 				76842FCE1F62977B00F1A0D3 /* README.md in Sources */,
 				76782EEB1F801DF8008878F6 /* AVURLAsset+Extensions.swift in Sources */,
-				762804981FB36B4400DB54CC /* AnalyticsConnectorType.swift in Sources */,
 				761DA2071F988C700002A171 /* TaskType.swift in Sources */,
 				761DA2091F9890140002A171 /* Configuration.swift in Sources */,
 				76842FCF1F62977B00F1A0D3 /* UPGRADE_GUIDE.md in Sources */,
+				7628049A1FB45A2A00DB54CC /* TaskAnalyticsConnector.swift in Sources */,
 				761DA20B1F9890320002A171 /* ResponseData.swift in Sources */,
 				76782EDB1F801CC2008878F6 /* TaskDelegate.swift in Sources */,
 				76782EE31F801D71008878F6 /* DownloadFairplayRequester.swift in Sources */,
