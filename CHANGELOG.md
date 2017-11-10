@@ -3,7 +3,7 @@
 * `0.1.x` Releases - [0.1.0](#010)
 
 ## 0.1.0
-NO RELEASE YET
+Released 10 Nov 2017
 
 #### Features
 
@@ -12,6 +12,7 @@ NO RELEASE YET
 * `EMP-10474` Persist and retrieve `FairPlay` content keys in download and offline scenarios.
 * `EMP-10478` Preparation of `DownloadTask`s now occur once `resume()` is called.
 * `SessionManager` manages generic `DownloadTaskType` allowing for easy extensibility.
+*`EMP-10609` Analytics event dispatch.
 
 #### Changes
 * `EMP-10486` Removed `Downloader` in favour of using `SessionManager` directly.
