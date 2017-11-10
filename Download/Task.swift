@@ -15,8 +15,8 @@ public struct Progress {
     public let current: Double
 }
 
+
 public final class Task: TaskType {
-    
     public let eventPublishTransmitter = EventPublishTransmitter<Task>()
     
     public var task: AVAssetDownloadTask?
@@ -24,6 +24,7 @@ public final class Task: TaskType {
     public var responseData: ResponseData
     public var fairplayRequester: DownloadFairplayRequester?
     public let sessionManager: SessionManager<Task>
+    public var analyticsConnector: TaskAnalyticsConnector
     
     internal var urlAsset: AVURLAsset? {
         return task?.urlAsset
@@ -36,18 +37,20 @@ public final class Task: TaskType {
     
     
     /// New, fresh DownloadTasks
-    public init(sessionManager: SessionManager<Task>, configuration: Configuration, fairplayRequester: DownloadFairplayRequester? = nil, responseData: ResponseData = ResponseData()) {
+    public init(sessionManager: SessionManager<Task>, configuration: Configuration, fairplayRequester: DownloadFairplayRequester? = nil, analyticsProvider: TaskAnalyticsProvider?, responseData: ResponseData = ResponseData()) {
         self.sessionManager = sessionManager
         self.configuration = configuration
         self.fairplayRequester = fairplayRequester
+        self.analyticsConnector = TaskAnalyticsConnector(provider: analyticsProvider)
         self.responseData = responseData
     }
     
-    public init(restoredTask: AVAssetDownloadTask, sessionManager: SessionManager<Task>, configuration: Configuration, fairplayRequester: DownloadFairplayRequester? = nil, responseData: ResponseData = ResponseData()) {
+    public init(restoredTask: AVAssetDownloadTask, sessionManager: SessionManager<Task>, configuration: Configuration, fairplayRequester: DownloadFairplayRequester? = nil, analyticsProvider: TaskAnalyticsProvider?, responseData: ResponseData = ResponseData()) {
         self.task = restoredTask
         self.sessionManager = sessionManager
         self.configuration = configuration
         self.fairplayRequester = fairplayRequester
+        self.analyticsConnector = TaskAnalyticsConnector(provider: analyticsProvider)
         self.responseData = responseData
     }
 }
@@ -180,4 +183,47 @@ extension Task {
 
 extension Task: EventPublisher {
     public typealias DownloadEventError = DownloadError
+    
+    
+    public func onResumed(callback: @escaping (Task) -> Void) -> Task {
+        eventPublishTransmitter.onResumed = { task in
+            task.analyticsConnector.onDownloadResumed(task)
+            callback(task)
+        }
+        return self
+    }
+    
+    public func onSuspended(callback: @escaping (Task) -> Void) -> Task {
+        eventPublishTransmitter.onSuspended = { task in
+            task.analyticsConnector.onDownloadPaused(task)
+            callback(task)
+        }
+        return self
+    }
+    
+    public func onCanceled(callback: @escaping (Task, URL) -> Void) -> Task {
+        eventPublishTransmitter.onCanceled = {task, url in
+            task.analyticsConnector.onDownloadCancelled(task)
+            callback(task,url)
+        }
+        return self
+    }
+    
+    //    public func onStarted(callback:
+    
+    public func onCompleted(callback: @escaping (Task, URL) -> Void) -> Task {
+        eventPublishTransmitter.onCompleted = { task, url in
+            task.analyticsConnector.onDownloadCompleted(task)
+            callback(task,url)
+        }
+        return self
+    }
+    
+    public func onError(callback: @escaping (Task, URL?, DownloadError) -> Void) -> Task {
+        eventPublishTransmitter.onError = { task, url, error in
+            task.analyticsConnector.onDownloadError(task, error)
+            callback(task,url, error)
+        }
+        return self
+    }
 }

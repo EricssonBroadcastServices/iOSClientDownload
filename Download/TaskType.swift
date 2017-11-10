@@ -15,6 +15,8 @@ public protocol TaskType: class, EventPublisher {
     var sessionManager: SessionManager<Self> { get }
     var delegate: TaskDelegate<Self> { get }
     var fairplayRequester: DownloadFairplayRequester? { get }
+    var eventPublishTransmitter: EventPublishTransmitter<Self> { get }
+    
     var task: AVAssetDownloadTask? { get }
     
     associatedtype DownloadState
@@ -107,6 +109,7 @@ extension TaskType {
             eventPublishTransmitter.onPrepared(self)
             eventPublishTransmitter.onSuspended(self)
         case .canceling:
+            print("🚨 The restored task might be stuck in .canceling state") // TODO: How do we handle this?
             break
         case .completed:
             if let error = restoredTask.error {
@@ -122,5 +125,30 @@ extension TaskType {
                 }
             }
         }
+    }
+}
+
+extension TaskType {
+    public var duration: Int64? {
+        guard let cmTime = task?.urlAsset.duration else { return nil }
+        guard !cmTime.isIndefinite else { return nil }
+        return Int64(cmTime.seconds*1000)
+    }
+    
+    public var estimatedSize: Int64? {
+        
+        return task?.urlAsset.tracks.reduce(0) { $0 + $1.estimatedSize }
+    }
+    
+    public var estimatedDownloadedSize: Int64? {
+        return task?.countOfBytesReceived
+        //        let values = task?.loadedTimeRanges.map{ $0.timeRangeValue }
+        //
+        //        guard let loadedTimeRanges = values else { return nil }
+        //        return task?
+        //            .urlAsset
+        //            .tracks
+        //            .filter{ loadedTimeRanges.contains($0.timeRange) }
+        //            .reduce(0) { $0 + $1.estimatedSize }
     }
 }
