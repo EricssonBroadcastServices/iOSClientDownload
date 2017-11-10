@@ -34,6 +34,7 @@
 		76842FD81F62979A00F1A0D3 /* Appfile in Resources */ = {isa = PBXBuildFile; fileRef = 76842FD41F62979A00F1A0D3 /* Appfile */; };
 		76842FD91F62979A00F1A0D3 /* Fastfile in Resources */ = {isa = PBXBuildFile; fileRef = 76842FD51F62979A00F1A0D3 /* Fastfile */; };
 		76AD6FA81F821F960084524A /* FileManager+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76AD6FA71F821F960084524A /* FileManager+Extensions.swift */; };
+		76C9B4811FB5B9250058045F /* AVAssetTrack+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76C9B4801FB5B9250058045F /* AVAssetTrack+Extensions.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -80,6 +81,7 @@
 		76842FD41F62979A00F1A0D3 /* Appfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Appfile; sourceTree = "<group>"; };
 		76842FD51F62979A00F1A0D3 /* Fastfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Fastfile; sourceTree = "<group>"; };
 		76AD6FA71F821F960084524A /* FileManager+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FileManager+Extensions.swift"; sourceTree = "<group>"; };
+		76C9B4801FB5B9250058045F /* AVAssetTrack+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AVAssetTrack+Extensions.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -148,6 +150,7 @@
 				76782EE81F801DC8008878F6 /* AdditionalMedia.swift */,
 				76782EEA1F801DF8008878F6 /* AVURLAsset+Extensions.swift */,
 				76AD6FA71F821F960084524A /* FileManager+Extensions.swift */,
+				76C9B4801FB5B9250058045F /* AVAssetTrack+Extensions.swift */,
 			);
 			path = Download;
 			sourceTree = "<group>";
@@ -300,6 +303,7 @@
 				76782ED91F801CB9008878F6 /* Task.swift in Sources */,
 				76782EE71F801DA9008878F6 /* MediaOption.swift in Sources */,
 				76AD6FA81F821F960084524A /* FileManager+Extensions.swift in Sources */,
+				76C9B4811FB5B9250058045F /* AVAssetTrack+Extensions.swift in Sources */,
 				766502EE1F98E120009A5BFE /* EventPublisher.swift in Sources */,
 				766502F21F98E1A0009A5BFE /* EventPublishTransmitter.swift in Sources */,
 				76842FCE1F62977B00F1A0D3 /* README.md in Sources */,
