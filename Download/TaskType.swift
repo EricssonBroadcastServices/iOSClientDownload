@@ -126,3 +126,33 @@ extension TaskType {
         }
     }
 }
+
+extension TaskType {
+    public var duration: Int64? {
+        guard let cmTime = task?.urlAsset.duration else { return nil }
+        guard !cmTime.isIndefinite else { return nil }
+        return Int64(cmTime.seconds*1000)
+    }
+    
+    public var estimatedSize: Int64? {
+        return task?.urlAsset.tracks.reduce(0) { $0 + $1.estimatedSize }
+    }
+    
+    public var estimatedDownloadedSize: Int64? {
+        let values = task?.loadedTimeRanges.map{ $0.timeRangeValue }
+        guard let loadedTimeRanges = values else { return nil }
+        return task?
+            .urlAsset
+            .tracks
+            .filter{ loadedTimeRanges.contains($0.timeRange) }
+            .reduce(0) { $0 + $1.estimatedSize }
+    }
+}
+
+extension AVAssetTrack {
+    var estimatedSize: Int64 {
+        let duration = CMTimeGetSeconds(timeRange.duration)
+        let bytesPerSec = Float64(estimatedDataRate / 8) // Convert bps to bytesPerSec
+        return Int64(bytesPerSec * duration)
+    }
+}
