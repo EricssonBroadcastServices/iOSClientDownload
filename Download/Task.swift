@@ -137,12 +137,23 @@ extension Task {
     }
     
     
-    public enum State {
+    public enum State: Equatable {
         case notStarted
         case running
         case suspended
         case canceling
         case completed
+        
+        public static func == (lhs: State, rhs: State) -> Bool {
+            switch (lhs,rhs) {
+            case (.notStarted, .notStarted): return true
+            case (.running, .running): return true
+            case (.suspended, .suspended): return true
+            case (.canceling, .canceling): return true
+            case (.completed, .completed): return true
+            default: return false
+            }
+        }
     }
     
     public var state: State {
