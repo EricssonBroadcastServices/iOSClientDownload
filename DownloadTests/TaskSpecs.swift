@@ -99,7 +99,7 @@ class TaskSpec: QuickSpec {
                             onResumed = true
                         }
                         .onError{ task, url, error in
-                        responseError = error
+                            responseError = error
                         }
                         .prepare()
                         .resume()

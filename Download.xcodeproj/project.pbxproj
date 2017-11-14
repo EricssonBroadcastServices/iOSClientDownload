@@ -11,6 +11,7 @@
 		761DA2091F9890140002A171 /* Configuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761DA2081F9890140002A171 /* Configuration.swift */; };
 		761DA20B1F9890320002A171 /* ResponseData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761DA20A1F9890320002A171 /* ResponseData.swift */; };
 		7628049A1FB45A2A00DB54CC /* TaskAnalyticsConnector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 762804991FB45A2A00DB54CC /* TaskAnalyticsConnector.swift */; };
+		76645EE41FBB4749001C63F2 /* DownloadErrorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76645EE31FBB4749001C63F2 /* DownloadErrorSpec.swift */; };
 		766502EE1F98E120009A5BFE /* EventPublisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 766502ED1F98E11F009A5BFE /* EventPublisher.swift */; };
 		766502F21F98E1A0009A5BFE /* EventPublishTransmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 766502F11F98E1A0009A5BFE /* EventPublishTransmitter.swift */; };
 		76782ED91F801CB9008878F6 /* Task.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76782ED81F801CB9008878F6 /* Task.swift */; };
@@ -51,6 +52,7 @@
 		761DA2081F9890140002A171 /* Configuration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Configuration.swift; sourceTree = "<group>"; };
 		761DA20A1F9890320002A171 /* ResponseData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseData.swift; sourceTree = "<group>"; };
 		762804991FB45A2A00DB54CC /* TaskAnalyticsConnector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskAnalyticsConnector.swift; sourceTree = "<group>"; };
+		76645EE31FBB4749001C63F2 /* DownloadErrorSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadErrorSpec.swift; sourceTree = "<group>"; };
 		766502ED1F98E11F009A5BFE /* EventPublisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventPublisher.swift; sourceTree = "<group>"; };
 		766502F11F98E1A0009A5BFE /* EventPublishTransmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventPublishTransmitter.swift; sourceTree = "<group>"; };
 		7672041A1F82CE14006D85B0 /* Cartfile.resolved */ = {isa = PBXFileReference; lastKnownFileType = text; path = Cartfile.resolved; sourceTree = SOURCE_ROOT; };
@@ -164,6 +166,7 @@
 			children = (
 				76842FBE1F62969200F1A0D3 /* Info.plist */,
 				76F11F3F1FBB394500798024 /* TaskSpecs.swift */,
+				76645EE31FBB4749001C63F2 /* DownloadErrorSpec.swift */,
 			);
 			path = DownloadTests;
 			sourceTree = "<group>";
@@ -338,6 +341,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				76F11F401FBB394500798024 /* TaskSpecs.swift in Sources */,
+				76645EE41FBB4749001C63F2 /* DownloadErrorSpec.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
