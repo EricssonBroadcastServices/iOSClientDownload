@@ -1,6 +1,10 @@
 # CHANGELOG
 
+* `0.72.x` Releases - [0.72.0](#0720)
 * `0.1.x` Releases - [0.1.0](#010)
+
+## 0.72.0
+* Build pipe improvements
 
 ## 0.1.0
 Released 10 Nov 2017
