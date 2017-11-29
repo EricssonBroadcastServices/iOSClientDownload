@@ -29,7 +29,7 @@ public protocol DownloadErrorConvertible: Error {
 }
 
 extension DownloadError {
-    public var localizedDescription: String {
+    public var message: String {
         switch self {
         case .generalError(error: let error): return "General Error: " + error.localizedDescription
         case .failedToStartTaskWithoutDestination: return "Task failed to start. No valid destination supplied"
