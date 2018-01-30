@@ -14,7 +14,7 @@ public protocol TaskType: class, EventPublisher {
     var responseData: ResponseData { get }
     var sessionManager: SessionManager<Self> { get }
     var delegate: TaskDelegate<Self> { get }
-    var fairplayRequester: DownloadFairplayRequester? { get }
+    var fairplayRequester: FairplayRequester? { get }
     var eventPublishTransmitter: EventPublishTransmitter<Self> { get }
     
     var task: AVAssetDownloadTask? { get }

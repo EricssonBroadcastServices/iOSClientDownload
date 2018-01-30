@@ -87,7 +87,7 @@ task.use(bitrate: 16000)
 ```
 
 ### FairPlay protection
-In order to use `DRM` protected offline assets through `FairPlay`, *client applications* need to implement a `DownloadFairplayRequester` to handle the *certificate* and *license* proceedure.  This functionality will be solution specific.  This protocol extends the *Apple* supplied `AVAssetResourceLoaderDelegate` protocol. **EMP** provides an out of the box implementation for *offline* `FairPlay` protection through the [Exposure module](https://github.com/EricssonBroadcastServices/iOSClientExposure) which integrates seamlessly with the rest of the platform.
+In order to use `DRM` protected offline assets through `FairPlay`, *client applications* need to implement a `FairplayRequester` to handle the *certificate* and *license* proceedure.  This functionality will be solution specific.  This protocol extends the *Apple* supplied `AVAssetResourceLoaderDelegate` protocol. **EMP** provides an out of the box implementation for *offline* `FairPlay` protection through the [Exposure module](https://github.com/EricssonBroadcastServices/iOSClientExposure) which integrates seamlessly with the rest of the platform.
 
 ```swift
 let fairplayRequester = SolutionSpecifiFairplayRequester()

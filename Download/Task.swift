@@ -22,7 +22,7 @@ public final class Task: TaskType {
     public var task: AVAssetDownloadTask?
     public var configuration: Configuration
     public var responseData: ResponseData
-    public var fairplayRequester: DownloadFairplayRequester?
+    public var fairplayRequester: FairplayRequester?
     public let sessionManager: SessionManager<Task>
     public var analyticsConnector: TaskAnalyticsConnector
     
@@ -37,7 +37,7 @@ public final class Task: TaskType {
     
     
     /// New, fresh DownloadTasks
-    public init(sessionManager: SessionManager<Task>, configuration: Configuration, fairplayRequester: DownloadFairplayRequester? = nil, analyticsProvider: TaskAnalyticsProvider?, responseData: ResponseData = ResponseData()) {
+    public init(sessionManager: SessionManager<Task>, configuration: Configuration, fairplayRequester: FairplayRequester? = nil, analyticsProvider: TaskAnalyticsProvider?, responseData: ResponseData = ResponseData()) {
         self.sessionManager = sessionManager
         self.configuration = configuration
         self.fairplayRequester = fairplayRequester
@@ -45,7 +45,7 @@ public final class Task: TaskType {
         self.responseData = responseData
     }
     
-    public init(restoredTask: AVAssetDownloadTask, sessionManager: SessionManager<Task>, configuration: Configuration, fairplayRequester: DownloadFairplayRequester? = nil, analyticsProvider: TaskAnalyticsProvider?, responseData: ResponseData = ResponseData()) {
+    public init(restoredTask: AVAssetDownloadTask, sessionManager: SessionManager<Task>, configuration: Configuration, fairplayRequester: FairplayRequester? = nil, analyticsProvider: TaskAnalyticsProvider?, responseData: ResponseData = ResponseData()) {
         self.task = restoredTask
         self.sessionManager = sessionManager
         self.configuration = configuration
