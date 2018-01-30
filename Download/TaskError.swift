@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import Exposure
 
 public enum TaskError: Error {
     case generalError(error: Error)

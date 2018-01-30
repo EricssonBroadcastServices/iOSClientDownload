@@ -46,7 +46,7 @@ class TaskSpec: QuickSpec {
                 it("Should have AnalyticsProvider attached") {
                     expect(task.analyticsConnector.provider).toNot(beNil())
                     
-                    task.analyticsConnector.onDownloadError(task,DownloadError.noStoragePathOnCancel)
+                    task.analyticsConnector.onDownloadError(task,TaskError.noStoragePathOnCancel)
                     task.analyticsConnector.onDownloadCancelled(task)
                     task.analyticsConnector.onDownloadCompleted(task)
                     task.analyticsConnector.onDownloadPaused(task)
@@ -90,7 +90,7 @@ class TaskSpec: QuickSpec {
                 it("Should fail with invalid URL") {
                     var onPrepared: Bool = false
                     var onResumed: Bool = false
-                    var responseError: DownloadError? = nil
+                    var responseError: Error? = nil
                     task
                         .onPrepared{ task in
                             onPrepared = true
@@ -114,7 +114,7 @@ class TaskSpec: QuickSpec {
 }
 
 class TestAnalyticsProvider: TaskAnalyticsProvider {
-    var testError: DownloadError?
+    var testError: Error?
     var cancelled: Bool = false
     var completed: Bool = false
     var paused: Bool = false
