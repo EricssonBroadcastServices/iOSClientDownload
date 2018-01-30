@@ -55,8 +55,8 @@ open class TaskAnalyticsConnector {
     ///
     /// - parameter task: `ExposureDownloadTask` broadcasting the event
     /// - parameter error: `ExposureError` causing the event to fire
-    internal var onDownloadError: (Task, Task.DownloadEventError) -> Void = { _ in }
-    open func downloadErrorEvent(callback: @escaping (Task, Task.DownloadEventError) -> Void) {
+    internal var onDownloadError: (Task, Error) -> Void = { _ in }
+    open func downloadErrorEvent(callback: @escaping (Task, Error) -> Void) {
         onDownloadError = callback
     }
 }

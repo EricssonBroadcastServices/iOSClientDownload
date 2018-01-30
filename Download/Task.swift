@@ -193,9 +193,6 @@ extension Task {
 }
 
 extension Task: EventPublisher {
-    public typealias DownloadEventError = DownloadError
-    
-    
     public func onResumed(callback: @escaping (Task) -> Void) -> Task {
         eventPublishTransmitter.onResumed = { task in
             task.analyticsConnector.onDownloadResumed(task)
@@ -230,7 +227,7 @@ extension Task: EventPublisher {
         return self
     }
     
-    public func onError(callback: @escaping (Task, URL?, DownloadError) -> Void) -> Task {
+    public func onError(callback: @escaping (Task, URL?, Error) -> Void) -> Task {
         eventPublishTransmitter.onError = { task, url, error in
             task.analyticsConnector.onDownloadError(task, error)
             callback(task,url, error)
