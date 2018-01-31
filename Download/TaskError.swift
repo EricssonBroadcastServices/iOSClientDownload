@@ -8,7 +8,7 @@
 
 import Foundation
 
-public enum DownloadError: DownloadErrorConvertible {
+public enum TaskError: Error {
     case generalError(error: Error)
     
     case failedToStartTaskWithoutDestination
@@ -18,17 +18,10 @@ public enum DownloadError: DownloadErrorConvertible {
     case downloadSessionInvalidated
     case storageUrlNotFound
     case targetUrlNotFound
-    
-    public static func downloadError(reason: DownloadError) -> DownloadError {
-        return reason
-    }
 }
 
-public protocol DownloadErrorConvertible: Error {
-    static func downloadError(reason: DownloadError) -> Self
-}
 
-extension DownloadError {
+extension TaskError {
     public var message: String {
         switch self {
         case .generalError(error: let error): return "General Error: " + error.localizedDescription
@@ -43,7 +36,7 @@ extension DownloadError {
     }
 }
 
-extension DownloadError {
+extension TaskError {
     /// Defines the `domain` specific code for the underlying error.
     public var code: Int {
         switch self {

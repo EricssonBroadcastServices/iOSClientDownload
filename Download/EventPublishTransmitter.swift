@@ -15,7 +15,7 @@ public class EventPublishTransmitter<T: EventPublisher> {
     public var onCanceled: (T, URL) -> Void = { _ in }
     public var onCompleted: (T, URL) -> Void = { _ in }
     public var onProgress: (T, Progress) -> Void = { _ in }
-    public var onError: (T, URL?, T.DownloadEventError) -> Void = { _ in }
+    public var onError: (T, URL?, Error) -> Void = { _ in }
     public var onPlaybackReady: (T, URL) -> Void = { _ in }
     public var onShouldDownloadMediaOption: ((T, AdditionalMedia) -> MediaOption?) = { _ in return nil }
     public var onDownloadingMediaOption: (T, MediaOption) -> Void = { _ in }

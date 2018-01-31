@@ -18,8 +18,7 @@
 		76782EDB1F801CC2008878F6 /* TaskDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76782EDA1F801CC2008878F6 /* TaskDelegate.swift */; };
 		76782EDD1F801CD0008878F6 /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76782EDC1F801CD0008878F6 /* SessionManager.swift */; };
 		76782EDF1F801CD9008878F6 /* SessionDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76782EDE1F801CD9008878F6 /* SessionDelegate.swift */; };
-		76782EE11F801D59008878F6 /* DownloadError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76782EE01F801D59008878F6 /* DownloadError.swift */; };
-		76782EE31F801D71008878F6 /* DownloadFairplayRequester.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76782EE21F801D71008878F6 /* DownloadFairplayRequester.swift */; };
+		76782EE11F801D59008878F6 /* TaskError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76782EE01F801D59008878F6 /* TaskError.swift */; };
 		76782EE71F801DA9008878F6 /* MediaOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76782EE61F801DA9008878F6 /* MediaOption.swift */; };
 		76782EE91F801DC8008878F6 /* AdditionalMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76782EE81F801DC8008878F6 /* AdditionalMedia.swift */; };
 		76782EEB1F801DF8008878F6 /* AVURLAsset+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76782EEA1F801DF8008878F6 /* AVURLAsset+Extensions.swift */; };
@@ -30,6 +29,7 @@
 		76842FD71F62979A00F1A0D3 /* update_dependency_graph.rb in Resources */ = {isa = PBXBuildFile; fileRef = 76842FD31F62979A00F1A0D3 /* update_dependency_graph.rb */; };
 		76842FD81F62979A00F1A0D3 /* Appfile in Resources */ = {isa = PBXBuildFile; fileRef = 76842FD41F62979A00F1A0D3 /* Appfile */; };
 		76842FD91F62979A00F1A0D3 /* Fastfile in Resources */ = {isa = PBXBuildFile; fileRef = 76842FD51F62979A00F1A0D3 /* Fastfile */; };
+		76A89D462020A2ED00C23579 /* FairplayRequester.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76A89D452020A2ED00C23579 /* FairplayRequester.swift */; };
 		76AD6FA81F821F960084524A /* FileManager+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76AD6FA71F821F960084524A /* FileManager+Extensions.swift */; };
 		76C9B4811FB5B9250058045F /* AVAssetTrack+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76C9B4801FB5B9250058045F /* AVAssetTrack+Extensions.swift */; };
 		76F11F3B1FBB38B800798024 /* Nimble.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 76F11F3D1FBB38B800798024 /* Nimble.framework */; };
@@ -62,8 +62,7 @@
 		76782EDA1F801CC2008878F6 /* TaskDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskDelegate.swift; sourceTree = "<group>"; };
 		76782EDC1F801CD0008878F6 /* SessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionManager.swift; sourceTree = "<group>"; };
 		76782EDE1F801CD9008878F6 /* SessionDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDelegate.swift; sourceTree = "<group>"; };
-		76782EE01F801D59008878F6 /* DownloadError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadError.swift; sourceTree = "<group>"; };
-		76782EE21F801D71008878F6 /* DownloadFairplayRequester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadFairplayRequester.swift; sourceTree = "<group>"; };
+		76782EE01F801D59008878F6 /* TaskError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskError.swift; sourceTree = "<group>"; };
 		76782EE61F801DA9008878F6 /* MediaOption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaOption.swift; sourceTree = "<group>"; };
 		76782EE81F801DC8008878F6 /* AdditionalMedia.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdditionalMedia.swift; sourceTree = "<group>"; };
 		76782EEA1F801DF8008878F6 /* AVURLAsset+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AVURLAsset+Extensions.swift"; sourceTree = "<group>"; };
@@ -80,6 +79,7 @@
 		76842FD31F62979A00F1A0D3 /* update_dependency_graph.rb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.ruby; path = update_dependency_graph.rb; sourceTree = "<group>"; };
 		76842FD41F62979A00F1A0D3 /* Appfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Appfile; sourceTree = "<group>"; };
 		76842FD51F62979A00F1A0D3 /* Fastfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Fastfile; sourceTree = "<group>"; };
+		76A89D452020A2ED00C23579 /* FairplayRequester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FairplayRequester.swift; sourceTree = "<group>"; };
 		76AD6FA71F821F960084524A /* FileManager+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FileManager+Extensions.swift"; sourceTree = "<group>"; };
 		76C9B4801FB5B9250058045F /* AVAssetTrack+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AVAssetTrack+Extensions.swift"; sourceTree = "<group>"; };
 		76F11F3D1FBB38B800798024 /* Nimble.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Nimble.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -141,17 +141,17 @@
 				76842FB11F62969200F1A0D3 /* Download.h */,
 				76842FB21F62969200F1A0D3 /* Info.plist */,
 				76782ED81F801CB9008878F6 /* Task.swift */,
+				76A89D452020A2ED00C23579 /* FairplayRequester.swift */,
 				762804991FB45A2A00DB54CC /* TaskAnalyticsConnector.swift */,
 				76782EDA1F801CC2008878F6 /* TaskDelegate.swift */,
 				76782EDC1F801CD0008878F6 /* SessionManager.swift */,
 				76782EDE1F801CD9008878F6 /* SessionDelegate.swift */,
 				761DA2081F9890140002A171 /* Configuration.swift */,
 				761DA20A1F9890320002A171 /* ResponseData.swift */,
-				76782EE01F801D59008878F6 /* DownloadError.swift */,
+				76782EE01F801D59008878F6 /* TaskError.swift */,
 				766502ED1F98E11F009A5BFE /* EventPublisher.swift */,
 				766502F11F98E1A0009A5BFE /* EventPublishTransmitter.swift */,
 				761DA2061F988C700002A171 /* TaskType.swift */,
-				76782EE21F801D71008878F6 /* DownloadFairplayRequester.swift */,
 				76782EE61F801DA9008878F6 /* MediaOption.swift */,
 				76782EE81F801DC8008878F6 /* AdditionalMedia.swift */,
 				76782EEA1F801DF8008878F6 /* AVURLAsset+Extensions.swift */,
@@ -326,10 +326,10 @@
 				761DA2071F988C700002A171 /* TaskType.swift in Sources */,
 				761DA2091F9890140002A171 /* Configuration.swift in Sources */,
 				7628049A1FB45A2A00DB54CC /* TaskAnalyticsConnector.swift in Sources */,
+				76A89D462020A2ED00C23579 /* FairplayRequester.swift in Sources */,
 				761DA20B1F9890320002A171 /* ResponseData.swift in Sources */,
 				76782EDB1F801CC2008878F6 /* TaskDelegate.swift in Sources */,
-				76782EE31F801D71008878F6 /* DownloadFairplayRequester.swift in Sources */,
-				76782EE11F801D59008878F6 /* DownloadError.swift in Sources */,
+				76782EE11F801D59008878F6 /* TaskError.swift in Sources */,
 				76782EE91F801DC8008878F6 /* AdditionalMedia.swift in Sources */,
 				76782EDD1F801CD0008878F6 /* SessionManager.swift in Sources */,
 				76782EDF1F801CD9008878F6 /* SessionDelegate.swift in Sources */,

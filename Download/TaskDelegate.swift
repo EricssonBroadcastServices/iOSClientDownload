@@ -31,8 +31,8 @@ extension TaskDelegate {
             // Completed with success
             guard let location = downloadTask.responseData.destination else {
                 // Error when no storage url is found
-                print("✅ DownloadTask completed. 🚨 ", DownloadError.completedWithoutValidStorageUrl.message)
-                downloadTask.eventPublishTransmitter.onError(downloadTask, nil, .downloadError(reason: .completedWithoutValidStorageUrl))
+                print("✅ DownloadTask completed. 🚨 ", TaskError.completedWithoutValidStorageUrl.message)
+                downloadTask.eventPublishTransmitter.onError(downloadTask, nil, TaskError.completedWithoutValidStorageUrl)
                 return
             }
             
@@ -80,14 +80,14 @@ extension TaskDelegate {
         }
         else {
             print("🚨 DownloadTask completed with error:",error.localizedDescription)
-            downloadTask.eventPublishTransmitter.onError(downloadTask, downloadTask.responseData.destination, .downloadError(reason: .completedWithError(error: error)))
+            downloadTask.eventPublishTransmitter.onError(downloadTask, downloadTask.responseData.destination, TaskError.completedWithError(error: error))
         }
     }
     
     private func handleCancellation(task: T) {
         guard let destination = task.responseData.destination else {
-            print("🚨 DownloadTask cancelled. ⚠️ ", DownloadError.noStoragePathOnCancel.message)
-            task.eventPublishTransmitter.onError(task, task.responseData.destination, .downloadError(reason: .noStoragePathOnCancel))
+            print("🚨 DownloadTask cancelled. ⚠️ ", TaskError.noStoragePathOnCancel.message)
+            task.eventPublishTransmitter.onError(task, task.responseData.destination, TaskError.noStoragePathOnCancel)
             return
         }
         task.responseData.destination = nil

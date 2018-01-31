@@ -14,7 +14,7 @@ public protocol TaskType: class, EventPublisher {
     var responseData: ResponseData { get }
     var sessionManager: SessionManager<Self> { get }
     var delegate: TaskDelegate<Self> { get }
-    var fairplayRequester: DownloadFairplayRequester? { get }
+    var fairplayRequester: FairplayRequester? { get }
     var eventPublishTransmitter: EventPublishTransmitter<Self> { get }
     
     var task: AVAssetDownloadTask? { get }
@@ -41,9 +41,9 @@ extension TaskType {
 }
 
 extension TaskType {
-    public func createAndConfigureTask(with options: [String: Any]?, using configuration: Configuration, callback: (AVAssetDownloadTask?, DownloadEventError?) -> Void) {
+    public func createAndConfigureTask(with options: [String: Any]?, using configuration: Configuration, callback: (AVAssetDownloadTask?, TaskError?) -> Void) {
         guard let url = configuration.url else {
-            callback(nil, .downloadError(reason: .targetUrlNotFound))
+            callback(nil, TaskError.targetUrlNotFound)
             return
         }
         
@@ -55,7 +55,7 @@ extension TaskType {
                                        assetArtworkData: configuration.artwork,
                                        options: options) else {
                                         // This method may return nil if the AVAssetDownloadURLSession has been invalidated.
-                                        callback(nil, .downloadError(reason: .downloadSessionInvalidated))
+                                        callback(nil, TaskError.downloadSessionInvalidated)
                                         return
             }
             task.taskDescription = configuration.identifier
@@ -64,7 +64,7 @@ extension TaskType {
         }
         else {
             guard let destination = responseData.destination else {
-                callback(nil, .downloadError(reason: .failedToStartTaskWithoutDestination))
+                callback(nil, TaskError.failedToStartTaskWithoutDestination)
                 return
             }
             guard let task = sessionManager
@@ -73,7 +73,7 @@ extension TaskType {
                                        destinationURL: destination,
                                        options: options) else {
                                         // This method may return nil if the URLSession has been invalidated
-                                        callback(nil, .downloadError(reason: .downloadSessionInvalidated))
+                                        callback(nil, TaskError.downloadSessionInvalidated)
                                         return
             }
             task.taskDescription = configuration.identifier
@@ -113,7 +113,7 @@ extension TaskType {
             break
         case .completed:
             if let error = restoredTask.error {
-                eventPublishTransmitter.onError(self, responseData.destination, .downloadError(reason: .completedWithError(error: error)))
+                eventPublishTransmitter.onError(self, responseData.destination, TaskError.completedWithError(error: error))
             }
             else {
                 // Handle completion
@@ -121,7 +121,7 @@ extension TaskType {
                     eventPublishTransmitter.onCompleted(self, destination)
                 }
                 else {
-                    eventPublishTransmitter.onError(self, responseData.destination, .downloadError(reason: .completedWithoutValidStorageUrl))
+                    eventPublishTransmitter.onError(self, responseData.destination, TaskError.completedWithoutValidStorageUrl)
                 }
             }
         }

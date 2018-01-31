@@ -17,14 +17,14 @@ class DownloadErrorSpec: QuickSpec {
     override func spec() {
         describe("Basics") {
             it("Should produce correct error codes") {
-                expect(DownloadError.generalError(error: FakeError.fake).code).to(equal(101))
-                expect(DownloadError.failedToStartTaskWithoutDestination.code).to(equal(102))
-                expect(DownloadError.completedWithError(error: FakeError.fake).code).to(equal(103))
-                expect(DownloadError.completedWithoutValidStorageUrl.code).to(equal(104))
-                expect(DownloadError.noStoragePathOnCancel.code).to(equal(105))
-                expect(DownloadError.downloadSessionInvalidated.code).to(equal(106))
-                expect(DownloadError.storageUrlNotFound.code).to(equal(107))
-                expect(DownloadError.targetUrlNotFound.code).to(equal(108))
+                expect(TaskError.generalError(error: FakeError.fake).code).to(equal(101))
+                expect(TaskError.failedToStartTaskWithoutDestination.code).to(equal(102))
+                expect(TaskError.completedWithError(error: FakeError.fake).code).to(equal(103))
+                expect(TaskError.completedWithoutValidStorageUrl.code).to(equal(104))
+                expect(TaskError.noStoragePathOnCancel.code).to(equal(105))
+                expect(TaskError.downloadSessionInvalidated.code).to(equal(106))
+                expect(TaskError.storageUrlNotFound.code).to(equal(107))
+                expect(TaskError.targetUrlNotFound.code).to(equal(108))
             }
         }
     }

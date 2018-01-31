@@ -9,8 +9,6 @@
 import Foundation
 
 public protocol EventPublisher {
-    associatedtype DownloadEventError: DownloadErrorConvertible
-    
     var eventPublishTransmitter: EventPublishTransmitter<Self> { get }
     
     func onPrepared(callback: @escaping (Self) -> Void) -> Self
@@ -25,7 +23,7 @@ public protocol EventPublisher {
     
     func onProgress(callback: @escaping (Self, Progress) -> Void) -> Self
     
-    func onError(callback: @escaping (Self, URL?, DownloadEventError) -> Void) -> Self
+    func onError(callback: @escaping (Self, URL?, Error) -> Void) -> Self
     
     func onPlaybackReady(callback: @escaping (Self, URL) -> Void) -> Self
     
@@ -73,7 +71,7 @@ extension EventPublisher {
     }
     
     @discardableResult
-    public func onError(callback: @escaping (Self, URL?, DownloadEventError) -> Void) -> Self {
+    public func onError(callback: @escaping (Self, URL?, Error) -> Void) -> Self {
         eventPublishTransmitter.onError = callback
         return self
     }
