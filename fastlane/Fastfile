@@ -50,14 +50,15 @@ platform :ios do
             
             fix_dependencies
             
+            Action.sh("git add -A")
             Action.sh("git commit -m 'Version: #{version}'")
             
             update_graph
             run_unit_tests
             
-            Action.sh("git push -u origin '#{version}'")
-            Action.sh("git tag '#{version}'")
-            Action.sh("git push origin '#{version}'")
+            add_git_tag(tag: version)
+            Action.sh("git push origin --all")
+            Action.sh("git push --tags")
             
             
             current_time = Time.now.to_f
