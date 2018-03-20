@@ -24,6 +24,22 @@ public enum TaskError: Error {
 extension TaskError {
     public var message: String {
         switch self {
+        case .generalError(error: _): return "GENERAL_ERROR"
+        case .failedToStartTaskWithoutDestination: return "FAILED_TO_START_TASK_WITHOUT_DESTINATION"
+        case .completedWithError(error: _): return "COMPLETED_WITH_ERROR"
+        case .completedWithoutValidStorageUrl: return "COMPLETED_WITHOUT_VALID_STORAGE_URL"
+        case .noStoragePathOnCancel: return "NO_STORAGE_PATH_ON_CANCEL"
+        case .downloadSessionInvalidated: return "DOWNLOAD_SESSION_INVALIDATED"
+        case .storageUrlNotFound: return "STORAGE_URL_NOT_FOUND"
+        case .targetUrlNotFound: return "TARGET_URL_NOT_FOUND"
+        }
+    }
+}
+
+extension TaskError {
+    /// Returns detailed information about the error
+    public var info: String? {
+        switch self {
         case .generalError(error: let error): return "General Error: " + error.localizedDescription
         case .failedToStartTaskWithoutDestination: return "Task failed to start. No valid destination supplied"
         case .completedWithError(error: let error): return "Completed with error: " + error.localizedDescription
