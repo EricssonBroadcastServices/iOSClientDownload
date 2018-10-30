@@ -21,8 +21,8 @@ class TaskSpec: QuickSpec {
             let assetId = UUID().uuidString
             let provider = TestAnalyticsProvider()
             if #available(iOS 10.0, *) {
-                let task = sessionManager.download(mediaLocator: url, assetId: assetId, analyticsProvider: provider)
                 it("Should prepare valid configuration") {
+                    let task = sessionManager.download(mediaLocator: url, assetId: assetId, analyticsProvider: provider)
                     expect(task.configuration.artwork).to(beNil())
                     expect(task.configuration.identifier).to(equal(assetId))
                     expect(task.configuration.url).toNot(beNil())
@@ -30,20 +30,24 @@ class TaskSpec: QuickSpec {
                 }
                 
                 it("Should not have ResponseData") {
+                    let task = sessionManager.download(mediaLocator: url, assetId: assetId, analyticsProvider: provider)
                     expect(task.responseData.destination).to(beNil())
                     expect(task.responseData.resolvedMediaSelection).to(beNil())
                 }
                 
                 it("Should record bitrate selection") {
+                    let task = sessionManager.download(mediaLocator: url, assetId: assetId, analyticsProvider: provider)
                     task.use(bitrate: 10)
                     expect(task.configuration.requiredBitrate).to(equal(10))
                 }
                 
                 it("Should start in .notStated State") {
+                    let task = sessionManager.download(mediaLocator: url, assetId: assetId, analyticsProvider: provider)
                     expect(task.state).to(equal(Task.State.notStarted))
                 }
                 
                 it("Should have AnalyticsProvider attached") {
+                    let task = sessionManager.download(mediaLocator: url, assetId: assetId, analyticsProvider: provider)
                     expect(task.analyticsConnector.provider).toNot(beNil())
                     
                     task.analyticsConnector.onDownloadError(task,TaskError.noStoragePathOnCancel)
@@ -63,50 +67,9 @@ class TaskSpec: QuickSpec {
                     expect(provider.stopped).to(beTrue())
                 }
                 
-                it("Should NOT respond to cancel unless prepared") {
-                    expect(task.task).to(beNil())
-                    var onCanceled = false
-                    task.onCanceled { _ in
-                        onCanceled = true
-                    }.cancel()
-                    
-                    expect(onCanceled).toEventually(equal(false))
-                }
-                
-                it("Should NOT respond to suspend unless prepared") {
-                    expect(task.task).to(beNil())
-                    var onSuspended = false
-                    task.onSuspended { _ in
-                        onSuspended = true
-                        }.suspend()
-                    
-                    expect(onSuspended).toEventually(equal(false))
-                }
-                
                 it("Should have NO urlAsset unless prepared") {
+                    let task = sessionManager.download(mediaLocator: url, assetId: assetId, analyticsProvider: provider)
                     expect(task.urlAsset).to(beNil())
-                }
-                
-                it("Should fail with invalid URL") {
-                    var onPrepared: Bool = false
-                    var onResumed: Bool = false
-                    var responseError: Error? = nil
-                    task
-                        .onPrepared{ task in
-                            onPrepared = true
-                        }
-                        .onResumed{ task in
-                            onResumed = true
-                        }
-                        .onError{ task, url, error in
-                            responseError = error
-                        }
-                        .prepare()
-                        .resume()
-                    
-                    expect(onPrepared).toEventually(beTrue())
-                    expect(onResumed).toEventually(beTrue())
-                    expect(responseError).toEventuallyNot(beNil())
                 }
             }
         }
