@@ -138,7 +138,7 @@ extension SessionManager {
         session
             .getAllTasks{ [weak self] tasks in
                 let downloadTasks = tasks
-                    .flatMap{ task -> AVAssetDownloadTask? in
+                    .compactMap{ task -> AVAssetDownloadTask? in
                         guard let assetTask = task as? AVAssetDownloadTask else {
                             print("❌ Ignoring \(task.taskDescription). Task is not an AVAssetDownloadTask. ")
                             return nil
