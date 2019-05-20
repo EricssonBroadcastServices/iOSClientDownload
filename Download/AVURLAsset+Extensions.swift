@@ -12,7 +12,7 @@ import AVFoundation
 extension AVURLAsset {
     // MARK: Subtitles
     private var subtitleGroup: AVMediaSelectionGroup? {
-        return mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicLegible)
+        return mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristic.legible)
     }
     
     var availableSubtitles: [MediaOption] {
@@ -29,7 +29,7 @@ extension AVURLAsset {
     
     // MARK: Audio
     private var audioGroup: AVMediaSelectionGroup? {
-        return mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicAudible)
+        return mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristic.audible)
     }
     
     var availableAudio: [MediaOption] {
@@ -46,7 +46,7 @@ extension AVURLAsset {
     
     // MARK: Video
     private var videoGroup: AVMediaSelectionGroup? {
-        return mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristicVisual)
+        return mediaSelectionGroup(forMediaCharacteristic: AVMediaCharacteristic.visual)
     }
     
     var availableVideo: [MediaOption] {

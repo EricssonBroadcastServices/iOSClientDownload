@@ -5,6 +5,11 @@
 * `0.72.x` Releases - [0.72.0](#0720)
 * `0.1.x` Releases - [0.1.0](#010)
 
+## 0.108.0
+
+#### Changes
+* `EMP-12783`  Updated to Swift 4.2
+
 ## 0.93.0
 
 #### Changes

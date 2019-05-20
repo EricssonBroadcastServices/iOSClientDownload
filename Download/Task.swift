@@ -68,7 +68,7 @@ extension Task {
         return self
     }
     
-    fileprivate func restoreOrCreate(forceNew: Bool, callback: @escaping () -> Void = { _ in }) {
+    fileprivate func restoreOrCreate(forceNew: Bool, callback: @escaping () -> Void = {  }) {
         sessionManager.restoreTask(with: configuration.identifier) { [weak self] restoredTask in
             guard let weakSelf = self else { return }
             if let restoredTask = restoredTask {
