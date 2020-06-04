@@ -69,32 +69,32 @@ extension Task {
     }
     
     fileprivate func restoreOrCreate(forceNew: Bool, callback: @escaping () -> Void = {  }) {
-        sessionManager.restoreTask(with: configuration.identifier) { [weak self] restoredTask in
-            guard let weakSelf = self else { return }
+        self.sessionManager.restoreTask(with: configuration.identifier) {  restoredTask in
+
             if let restoredTask = restoredTask {
-                weakSelf.configureResourceLoader(for: restoredTask)
+                self.configureResourceLoader(for: restoredTask)
                 
-                weakSelf.task = restoredTask
-                weakSelf.sessionManager.delegate[restoredTask] = weakSelf
+                self.task = restoredTask
+                self.sessionManager.delegate[restoredTask] = self
                 
-                weakSelf.handle(restoredTask: restoredTask)
+                self.handle(restoredTask: restoredTask)
             }
             else {
                 if forceNew {
-                    print("✅ No AVAssetDownloadTask prepared, creating new for: \(weakSelf.configuration.identifier)")
+                    print("✅ No AVAssetDownloadTask prepared, creating new for: \(self.configuration.identifier)")
                     // Create a fresh task
-                    let options = weakSelf.configuration.requiredBitrate != nil ? [AVAssetDownloadTaskMinimumRequiredMediaBitrateKey: weakSelf.configuration.requiredBitrate!] : nil
-                    weakSelf.createAndConfigureTask(with: options, using: weakSelf.configuration) { urlTask, error in
+                    let options = self.configuration.requiredBitrate != nil ? [AVAssetDownloadTaskMinimumRequiredMediaBitrateKey: self.configuration.requiredBitrate!] : nil
+                    self.createAndConfigureTask(with: options, using: self.configuration) { urlTask, error in
                         if let error = error {
-                            weakSelf.eventPublishTransmitter.onError(weakSelf, weakSelf.responseData.destination, error)
+                            self.eventPublishTransmitter.onError(self, self.responseData.destination, error)
                             return
                         }
                         
                         if let urlTask = urlTask {
-                            weakSelf.task = urlTask
-                            weakSelf.sessionManager.delegate[urlTask] = weakSelf
+                            self.task = urlTask
+                            self.sessionManager.delegate[urlTask] = self
                             print("👍 DownloadTask prepared")
-                            weakSelf.eventPublishTransmitter.onPrepared(weakSelf)
+                            self.eventPublishTransmitter.onPrepared(self)
                         }
                     }
                 }
@@ -108,7 +108,10 @@ extension Task {
         // AVAssetDownloadTask provides the ability to resume previously stopped downloads under certain circumstances. To do so, simply instantiate a new AVAssetDownloadTask with an AVURLAsset instantiated with a file NSURL pointing to the partially downloaded bundle with the desired download options, and the download will continue restoring any previously downloaded data. FPS keys remain encrypted in persisted form during this process.
         guard let task = task else {
             restoreOrCreate(forceNew: true) { [weak self] in
-                guard let `self` = self else { return }
+                guard let `self` = self else {
+                    return
+                    
+                }
                 `self`.task?.resume()
                 `self`.eventPublishTransmitter.onResumed(`self`)
             }
@@ -195,7 +198,7 @@ extension Task {
 extension Task: EventPublisher {
     public func onResumed(callback: @escaping (Task) -> Void) -> Task {
         eventPublishTransmitter.onResumed = { task in
-            task.analyticsConnector.onDownloadResumed(task)
+            // task.analyticsConnector.onDownloadResumed(task)
             callback(task)
         }
         return self
@@ -203,7 +206,7 @@ extension Task: EventPublisher {
     
     public func onSuspended(callback: @escaping (Task) -> Void) -> Task {
         eventPublishTransmitter.onSuspended = { task in
-            task.analyticsConnector.onDownloadPaused(task)
+            // task.analyticsConnector.onDownloadPaused(task)
             callback(task)
         }
         return self
@@ -211,7 +214,7 @@ extension Task: EventPublisher {
     
     public func onCanceled(callback: @escaping (Task, URL) -> Void) -> Task {
         eventPublishTransmitter.onCanceled = {task, url in
-            task.analyticsConnector.onDownloadCancelled(task)
+            // task.analyticsConnector.onDownloadCancelled(task)
             callback(task,url)
         }
         return self
@@ -221,7 +224,7 @@ extension Task: EventPublisher {
     
     public func onCompleted(callback: @escaping (Task, URL) -> Void) -> Task {
         eventPublishTransmitter.onCompleted = { task, url in
-            task.analyticsConnector.onDownloadCompleted(task)
+            // task.analyticsConnector.onDownloadCompleted(task)
             callback(task,url)
         }
         return self
@@ -229,7 +232,7 @@ extension Task: EventPublisher {
     
     public func onError(callback: @escaping (Task, URL?, Error) -> Void) -> Task {
         eventPublishTransmitter.onError = { task, url, error in
-            task.analyticsConnector.onDownloadError(task, error)
+            // task.analyticsConnector.onDownloadError(task, error)
             callback(task,url, error)
         }
         return self
