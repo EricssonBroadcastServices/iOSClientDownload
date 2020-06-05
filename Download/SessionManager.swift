@@ -154,7 +154,7 @@ extension SessionManager {
                             return nil
                         }
                         
-                        print("♻️ Found AVAssetDownloadTask \(assetId)",assetTask.urlAsset.url)
+                        // print("♻️ Found AVAssetDownloadTask \(assetId)",assetTask.urlAsset.url)
                         
                         self?.printRelovedState(for: assetTask)
                         return assetTask
