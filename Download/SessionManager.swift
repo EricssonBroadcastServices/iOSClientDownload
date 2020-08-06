@@ -53,10 +53,14 @@ public class SessionManager<T: TaskType> {
         self.session = AVAssetDownloadURLSession(configuration: configuration,
                                                  assetDownloadDelegate: delegate,
                                                  delegateQueue: OperationQueue.main)
-        
+
         delegate.sessionDidFinishEventsForBackgroundURLSession = { [weak self] session in
-            guard let strongSelf = self else { return }
-            DispatchQueue.main.async { strongSelf.backgroundCompletionHandler?() }
+            
+            guard let strongSelf = self else {return}
+            DispatchQueue.main.async {
+                strongSelf.backgroundCompletionHandler?()
+                
+            }
         }
     }
     
@@ -117,18 +121,19 @@ extension SessionManager {
     public func restoreTask(with assetId: String, callback: @escaping (AVAssetDownloadTask?) -> Void) {
         print("🛏 Restoring DownloadTask for",assetId)
         session
-            .getAllTasks{ [weak self] tasks in
+            .getAllTasks{  tasks in
                 let someTask = tasks
                     .filter{ $0.taskDescription == assetId }
                     .first
-                
+
                 guard let task = someTask, let assetTask = task as? AVAssetDownloadTask else {
                     callback(nil)
                     return
                 }
                 
                 print("♻️ Found AVAssetDownloadTask \(assetId)",assetTask.urlAsset.url)
-                self?.printRelovedState(for: assetTask)
+                self.printRelovedState(for: assetTask)
+
                 callback(assetTask)
         }
     }
@@ -149,7 +154,7 @@ extension SessionManager {
                             return nil
                         }
                         
-                        print("♻️ Found AVAssetDownloadTask \(assetId)",assetTask.urlAsset.url)
+                        // print("♻️ Found AVAssetDownloadTask \(assetId)",assetTask.urlAsset.url)
                         
                         self?.printRelovedState(for: assetTask)
                         return assetTask
@@ -159,11 +164,14 @@ extension SessionManager {
     }
     
     private func printRelovedState(for assetTask: AVAssetDownloadTask) {
+
         switch assetTask.state {
-        case .canceling: print("canceling")
+        case .canceling:print("canceling")
         case .running: print("running")
         case .suspended: print("suspended")
         case .completed: print("completed")
+        default:
+            print("printRelovedState : default")
         }
         if let taskError = assetTask.error as? NSError {
             if let reason = taskError.userInfo[NSURLErrorBackgroundTaskCancelledReasonKey] as? Int {

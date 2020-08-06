@@ -1,9 +1,14 @@
 # CHANGELOG
 
+* `2.2.00` Release - [2.2.00](#2200)
 * `0.93.x` Releases - [0.93.0](#0930)
 * `0.80.x` Releases - [0.80.0](#0800)
 * `0.72.x` Releases - [0.72.0](#0720)
 * `0.1.x` Releases - [0.1.0](#010)
+
+## 2.2.000
+#### Features
+* `EMP-14376` Update support for downloads 
 
 ## 0.108.0
 
@@ -15,7 +20,7 @@
 #### Changes
 * submodules no longer added through ssh
 
-## 0.80.0
+## 0.80.0,
 
 #### Changes
 * `EMP-11156` Standardized error messages and introduced an `info` variable

@@ -47,6 +47,18 @@ extension TaskType {
             return
         }
         
+        // TODO :- Use aggregateAssetDownloadTask
+        /* if #available(iOS 11.0, *) {
+            guard let task = sessionManager.session.aggregateAssetDownloadTask(with: AVURLAsset(url: url), mediaSelections: [], assetTitle: configuration.identifier, assetArtworkData: configuration.artwork, options: options) else {
+                callback(nil, TaskError.downloadSessionInvalidated)
+                return
+            }
+            
+            task.taskDescription = configuration.identifier
+            configureResourceLoader(for: task)
+            callback(task,nil)
+        } */
+        
         if #available(iOS 10.0, *) {
             guard let task = sessionManager
                 .session
@@ -99,9 +111,8 @@ extension TaskType {
 
 extension TaskType {
     public func handle(restoredTask: AVAssetDownloadTask) {
-        print("👍 DownloadTask restored")
-        
         switch restoredTask.state {
+            
         case .running:
             eventPublishTransmitter.onPrepared(self)
             eventPublishTransmitter.onResumed(self)
