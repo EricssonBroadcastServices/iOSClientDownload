@@ -17,7 +17,7 @@ public enum SessionConfigurationIdentifier: String {
 
 public class SessionManager<T: TaskType> {
     /// The underlying session.
-    internal let session: AVAssetDownloadURLSession
+    public let session: AVAssetDownloadURLSession
     
     /// The session delegate handling all the task and session delegate callbacks.
     internal(set) public var delegate: SessionDelegate<T>
