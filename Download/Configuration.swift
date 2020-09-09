@@ -14,6 +14,9 @@ public class Configuration {
     public let artwork: Data?
     
     public var requiredBitrate: Int64?
+    public var subtitles: [String]?
+    public var audios: [String]?
+    public var allAudiosSubs: Bool = false
     
     public init(identifier: String, url: URL? = nil, artwork: Data? = nil) {
         self.identifier = identifier
