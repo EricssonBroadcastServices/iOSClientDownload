@@ -18,6 +18,84 @@ public class TaskDelegate<T: TaskType>: NSObject {
 }
 
 extension TaskDelegate {
+    
+    /// Check for next media selection for download
+    /// - Parameters:
+    ///   - asset: asset
+    ///   - allAudiosSubs: all audios & subtitles
+    ///   - audios: audios
+    ///   - subtitles: subtitles
+    /// - Returns: selection group
+    fileprivate func nextMediaSelection(_ asset: AVURLAsset, allAudiosSubs: Bool, audios: [String]?, subtitles: [String]? ) -> (mediaSelectionGroup: AVMediaSelectionGroup?,
+        mediaSelectionOption: AVMediaSelectionOption?) {
+            
+            // If the specified asset has not associated asset cache, return nil tuple
+            guard let assetCache = asset.assetCache else {
+                return (nil, nil)
+            }
+            
+            // Iterate through audible and legible characteristics to find associated groups for asset
+            for characteristic in [AVMediaCharacteristic.audible, AVMediaCharacteristic.legible] {
+                
+                if let mediaSelectionGroup = asset.mediaSelectionGroup(forMediaCharacteristic: characteristic) {
+                    
+                    // Determine which offline media selection options exist for this asset
+                    let savedOptions = assetCache.mediaSelectionOptions(in: mediaSelectionGroup)
+                    
+                    // If there are still media options to download...
+                    if savedOptions.count < mediaSelectionGroup.options.count {
+                        for option in mediaSelectionGroup.options {
+                            if !savedOptions.contains(option) {
+                                
+                                // If all audios & subtitled needs to download
+                                if allAudiosSubs {
+                                    return (mediaSelectionGroup, option)
+                                } else {
+                                    
+                                    // Start downloading audio
+                                    if option.mediaType == .audio {
+                                        
+                                        // Check if the user has passed any audio
+                                        if let audios = audios {
+                                            for audio in audios {
+                                                
+                                                if (audio == option.displayName) {
+                                                    print("Found the audio track : \(option.displayName) =>  start downloading ")
+                                                    return (mediaSelectionGroup, option)
+                                                }
+                                            }
+                                        }
+                                        
+                                    }
+                                    
+                                    // Start downloading subtitles
+                                    if option.mediaType == .subtitle {
+                                        
+                                        if let subtitles = subtitles {
+                                            
+                                            for sub in subtitles {
+                                                if (sub == option.displayName && option.mediaType == .subtitle) {
+                                                    print("Found the subtitle track : \(option.displayName) =>  start downloading ")
+                                                    return (mediaSelectionGroup, option)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // At this point all media options have been downloaded.
+            return (nil, nil)
+    }
+}
+
+extension TaskDelegate {
+    
     internal func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         guard let downloadTask = downloadTask else {
             return
@@ -39,37 +117,49 @@ extension TaskDelegate {
             // Success
             guard let resolvedMedia = downloadTask.responseData.resolvedMediaSelection else {
                 // 1. No more media available. Trigger onCompleted
-                print("✅ DownloadTask completed.")
+                print("✅ DownloadTask completed. No more media available. Trigger onCompleted")
                 downloadTask.eventPublishTransmitter.onCompleted(downloadTask, location)
                 return
             }
             
-            // 2. Ask, by callback, if and which additional AVMediaSelectionOption's should be included
-            if let urlAsset = downloadTask.task?.urlAsset, let newSelection = downloadTask.eventPublishTransmitter.onShouldDownloadMediaOption(downloadTask, AdditionalMedia(asset: urlAsset)) {
+            if let urlAsset = downloadTask.task?.urlAsset {
+                let mediaSelectionPair = nextMediaSelection(urlAsset, allAudiosSubs: downloadTask.configuration.allAudiosSubs,  audios: downloadTask.configuration.audios, subtitles: downloadTask.configuration.subtitles )
                 
-                // 2.1 User indicated additional media is requested
-                let currentMediaOption = resolvedMedia.mutableCopy() as! AVMutableMediaSelection
-                
-                currentMediaOption.select(newSelection.option, in: newSelection.group)
-                
-                let options = [AVAssetDownloadTaskMediaSelectionKey: currentMediaOption]
-                
-                downloadTask.createAndConfigureTask(with: options, using: downloadTask.configuration) { [weak self] urlTask, error in
-                    guard let updatedTask = self?.downloadTask else { return }
-                    guard error == nil else {
-                        updatedTask.eventPublishTransmitter.onError(updatedTask, updatedTask.responseData.destination, error!)
-                        return
+                // If an undownloaded media selection option exists in the group...
+                if let group = mediaSelectionPair.mediaSelectionGroup,
+                    let option = mediaSelectionPair.mediaSelectionOption {
+                    
+                    // Exit early if no corresponding AVMediaSelection exists for the current task
+                    // guard let originalMediaSelection = mediaSelectionMap[task] else { return }
+                    
+                    // Create a mutable copy and select the media selection option in the media selection group
+                    let mediaSelection = resolvedMedia.mutableCopy() as! AVMutableMediaSelection
+                    mediaSelection.select(option, in: group)
+                    
+                    // Create a new download task with this media selection in its options
+                    let options = [AVAssetDownloadTaskMediaSelectionKey: mediaSelection]
+                    
+                    if #available(iOS 10.0, *) {
+                        let newAssetDownloadTask = downloadTask.sessionManager.session
+                            .makeAssetDownloadTask(asset: urlAsset,
+                                                   assetTitle: downloadTask.configuration.identifier,
+                                                   assetArtworkData: downloadTask.configuration.artwork,
+                                                   options: options)
+                        
+                        
+                        if let task = newAssetDownloadTask {
+                            downloadTask.sessionManager.delegate[task] = downloadTask
+                        }
+                        
+                        newAssetDownloadTask?.resume()
+                        
+                    } else {
+                        // Fallback on earlier versions , not supported
                     }
-                    updatedTask.eventPublishTransmitter.onDownloadingMediaOption(updatedTask, newSelection)
+                } else {
+                    print("✅ DownloadTask completed")
+                    downloadTask.eventPublishTransmitter.onCompleted(downloadTask, location)
                 }
-                
-                downloadTask.resume()
-//                onResumed(self)
-            }
-            else {
-                // 2.2 No additional media was requested
-                print("✅ DownloadTask completed.")
-                downloadTask.eventPublishTransmitter.onCompleted(downloadTask, location)
             }
         }
     }
