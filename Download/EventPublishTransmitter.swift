@@ -19,6 +19,7 @@ public class EventPublishTransmitter<T: EventPublisher> {
     public var onPlaybackReady: (T, URL) -> Void = { _,_  in }
     public var onShouldDownloadMediaOption: ((T, AdditionalMedia) -> MediaOption?) = { _,_  in return nil }
     public var onDownloadingMediaOption: (T, MediaOption) -> Void = { _,_  in }
+    public var onLicenceRenewed: (T, URL) -> Void = { _,_  in }
     
     public init() {
         

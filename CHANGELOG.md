@@ -1,11 +1,16 @@
 # CHANGELOG
 
+* `2.2.20` Release - [2.2.20](#2210)
 * `2.2.10` Release - [2.2.10](#2210)
 * `2.2.00` Release - [2.2.00](#2200)
 * `0.93.x` Releases - [0.93.0](#0930)
 * `0.80.x` Releases - [0.80.0](#0800)
 * `0.72.x` Releases - [0.72.0](#0720)
 * `0.1.x` Releases - [0.1.0](#010)
+
+## 2.2.200
+#### Changes
+* `EMP-15078` Add `onLicenceRenewed` event listener 
 
 ## 2.2.100
 #### Features
