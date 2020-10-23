@@ -30,6 +30,8 @@ public protocol EventPublisher {
     func onShouldDownloadMediaOption(callback: @escaping (Self, AdditionalMedia) -> MediaOption?) -> Self
     
     func onDownloadingMediaOption(callback: @escaping (Self, MediaOption) -> Void) -> Self
+    
+    func onLicenceRenewed(callback: @escaping (Self, URL) -> Void) -> Self
 }
 
 extension EventPublisher {
@@ -91,6 +93,12 @@ extension EventPublisher {
     @discardableResult
     public func onDownloadingMediaOption(callback: @escaping (Self, MediaOption) -> Void) -> Self {
         eventPublishTransmitter.onDownloadingMediaOption = callback
+        return self
+    }
+    
+    @discardableResult
+    public func onLicenceRenewed(callback: @escaping (Self, URL) -> Void) -> Self {
+        eventPublishTransmitter.onLicenceRenewed = callback
         return self
     }
 }

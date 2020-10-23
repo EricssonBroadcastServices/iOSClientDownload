@@ -237,4 +237,11 @@ extension Task: EventPublisher {
         }
         return self
     }
+    
+    public func onLicenceRenewed(callback: @escaping (Task, URL) -> Void) -> Self {
+        eventPublishTransmitter.onLicenceRenewed = { task, url in
+            callback(task, url)
+        }
+        return self
+    }
 }
