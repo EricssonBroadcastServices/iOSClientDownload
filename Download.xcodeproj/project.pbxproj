@@ -488,6 +488,10 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				MARKETING_VERSION = 2.2.200;
+				OTHER_LDFLAGS = (
+					"-weak_framework",
+					AVfoundation,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.emp.Download;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -511,6 +515,10 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				MARKETING_VERSION = 2.2.200;
+				OTHER_LDFLAGS = (
+					"-weak_framework",
+					AVfoundation,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.emp.Download;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;

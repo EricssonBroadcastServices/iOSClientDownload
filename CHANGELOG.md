@@ -1,6 +1,7 @@
 # CHANGELOG
 
-* `2.2.20` Release - [2.2.20](#2210)
+* `2.2.30` Release - [2.2.30](#2210)
+* `2.2.20` Release - [2.2.20](#2220)
 * `2.2.10` Release - [2.2.10](#2210)
 * `2.2.00` Release - [2.2.00](#2200)
 * `0.93.x` Releases - [0.93.0](#0930)
@@ -8,9 +9,16 @@
 * `0.72.x` Releases - [0.72.0](#0720)
 * `0.1.x` Releases - [0.1.0](#010)
 
-## 2.2.200
+
+## 2.2.300
 #### Changes
 * `EMP-15078` Add `onLicenceRenewed` event listener 
+
+
+## 2.2.200
+#### Bug Fixes
+* Add `-weak_framework AVfoundation` to fix Xcode compile errors
+
 
 ## 2.2.100
 #### Features
