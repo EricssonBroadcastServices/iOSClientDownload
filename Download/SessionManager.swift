@@ -16,6 +16,11 @@ public enum SessionConfigurationIdentifier: String {
 
 
 public class SessionManager<T: TaskType> {
+    
+    
+    public var backgroundErrorCompletionHandler: ((Error?) -> Void)?
+    
+    
     /// The underlying session.
     public let session: AVAssetDownloadURLSession
     
@@ -49,17 +54,39 @@ public class SessionManager<T: TaskType> {
         configuration: URLSessionConfiguration = URLSessionConfiguration.background(withIdentifier: SessionConfigurationIdentifier.default.rawValue),
         delegate: SessionDelegate<T> = SessionDelegate())
     {
+        
+        configuration.isDiscretionary = true
+        configuration.sessionSendsLaunchEvents = true
+        
         self.delegate = delegate
         self.session = AVAssetDownloadURLSession(configuration: configuration,
                                                  assetDownloadDelegate: delegate,
                                                  delegateQueue: OperationQueue.main)
 
         delegate.sessionDidFinishEventsForBackgroundURLSession = { [weak self] session in
-            
             guard let strongSelf = self else {return}
             DispatchQueue.main.async {
                 strongSelf.backgroundCompletionHandler?()
                 
+            }
+        }
+        
+        delegate.sessionDidCompleteWithError = { [weak self] session , error in
+            guard let strongSelf = self else { return }
+
+            DispatchQueue.main.async {
+                strongSelf.backgroundErrorCompletionHandler?(error)
+                if let taskError = error as NSError? {
+                    if let reason = taskError.userInfo[NSURLErrorBackgroundTaskCancelledReasonKey] as? Int {
+                        let code = taskError.code
+                        if reason == NSURLErrorCancelledReasonUserForceQuitApplication &&
+                            code == NSURLErrorCancelled {
+                            print("Previous download was failed with NSURLErrorCancelledReasonUserForceQuitApplication error, Will cancel all previous download tasks ")
+                            self?.cancelAllTasks()
+                            
+                        }
+                    }
+                }
             }
         }
     }
@@ -113,6 +140,25 @@ extension SessionManager where T == Task {
                         fairplayRequester: fairplayRequester,
                         analyticsProvider: analyticsProvider,
                         responseData: responseData)
+        }
+    }
+}
+
+extension SessionManager {
+    public func cancelAllTasks() {
+        print("🚨 Cancelling all previous downloadTasks")
+        session
+            .getAllTasks{ [weak self] tasks in
+                let _ = tasks
+                    .compactMap{ task -> AVAssetDownloadTask? in
+                        guard let assetTask = task as? AVAssetDownloadTask else {
+                            print("❌ Ignoring \(task.taskDescription). Task is not an AVAssetDownloadTask. ")
+                            return nil
+                        }
+                        assetTask.cancel()
+                        self?.printRelovedState(for: assetTask)
+                        return assetTask
+            }
         }
     }
 }

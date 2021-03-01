@@ -14,9 +14,12 @@ public class SessionDelegate<T: TaskType>: NSObject, AVAssetDownloadDelegate {
     /// Overrides default behavior for URLSessionDelegate method `urlSessionDidFinishEvents(forBackgroundURLSession:)`.
     internal var sessionDidFinishEventsForBackgroundURLSession: ((URLSession) -> Void)?
     
+    internal var sessionDidCompleteWithError: ((URLSession, Error?) -> Void)?
+    
+    
     private var requests: [Int: T] = [:]
     private let lock = NSLock()
-    
+
     /// Access the task delegate for the specified asset identifier in a thread-safe manner.
     public subscript(identifier: String) -> T? {
         get {
@@ -110,13 +113,16 @@ public class SessionDelegate<T: TaskType>: NSObject, AVAssetDownloadDelegate {
             // TODO: Is it wise to simply return? By design, only `AVAssetDownloadTask`s are supposed to be used here
             return
         }
-        
+
         if let delegate = self[assetDownloadTask]?.delegate {
             delegate.urlSession(session, task: task, didCompleteWithError: error)
-            
             self[assetDownloadTask] = nil
+        } else {
+            sessionDidCompleteWithError?(session, error)
         }
     }
+    
+
     
     // MARK: - URLSessionDelegate
     public func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
