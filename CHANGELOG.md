@@ -1,5 +1,6 @@
 # CHANGELOG
 
+* `2.2.40` Release - [2.2.40](#2240)
 * `2.2.30` Release - [2.2.30](#2210)
 * `2.2.20` Release - [2.2.20](#2220)
 * `2.2.10` Release - [2.2.10](#2210)
@@ -9,6 +10,9 @@
 * `0.72.x` Releases - [0.72.0](#0720)
 * `0.1.x` Releases - [0.1.0](#010)
 
+## 2.2.400
+#### Bug Fixes
+* `EMP-15755` Cancel all dowload tasks when `NSURLErrorCancelledReasonUserForceQuitApplication` error occured.
 
 ## 2.2.300
 #### Changes
