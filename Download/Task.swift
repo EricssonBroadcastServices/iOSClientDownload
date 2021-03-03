@@ -212,10 +212,10 @@ extension Task: EventPublisher {
         return self
     }
     
-    public func onCanceled(callback: @escaping (Task) -> Void) -> Task {
+    public func onCanceled(callback: @escaping (Task, URL) -> Void) -> Task {
         eventPublishTransmitter.onCanceled = {task, url in
             // task.analyticsConnector.onDownloadCancelled(task)
-            callback(task)
+            callback(task, url)
         }
         return self
     }
