@@ -150,8 +150,8 @@ extension SessionManager {
         session
             .getAllTasks{ [weak self] tasks in
                 let _ = tasks
-                    .compactMap{ task -> AVAssetDownloadTask? in
-                        guard let assetTask = task as? AVAssetDownloadTask else {
+                    .compactMap{ task -> AVAggregateAssetDownloadTask? in
+                        guard let assetTask = task as? AVAggregateAssetDownloadTask else {
                             print("❌ Ignoring \(task.taskDescription). Task is not an AVAssetDownloadTask. ")
                             return nil
                         }
@@ -164,7 +164,7 @@ extension SessionManager {
 }
 
 extension SessionManager {
-    public func restoreTask(with assetId: String, callback: @escaping (AVAssetDownloadTask?) -> Void) {
+    public func restoreTask(with assetId: String, callback: @escaping (AVAggregateAssetDownloadTask?) -> Void) {
         print("🛏 Restoring DownloadTask for",assetId)
         session
             .getAllTasks{  tasks in
@@ -172,7 +172,7 @@ extension SessionManager {
                     .filter{ $0.taskDescription == assetId }
                     .first
 
-                guard let task = someTask, let assetTask = task as? AVAssetDownloadTask else {
+                guard let task = someTask, let assetTask = task as? AVAggregateAssetDownloadTask else {
                     callback(nil)
                     return
                 }
@@ -184,13 +184,13 @@ extension SessionManager {
         }
     }
     
-    public func restoreTasks(callback: @escaping ([AVAssetDownloadTask]) -> Void) {
+    public func restoreTasks(callback: @escaping ([AVAggregateAssetDownloadTask]) -> Void) {
         print("🛏 Restoring DownloadTasks...")
         session
             .getAllTasks{ [weak self] tasks in
                 let downloadTasks = tasks
-                    .compactMap{ task -> AVAssetDownloadTask? in
-                        guard let assetTask = task as? AVAssetDownloadTask else {
+                    .compactMap{ task -> AVAggregateAssetDownloadTask? in
+                        guard let assetTask = task as? AVAggregateAssetDownloadTask else {
                             print("❌ Ignoring \(task.taskDescription). Task is not an AVAssetDownloadTask. ")
                             return nil
                         }
@@ -209,7 +209,7 @@ extension SessionManager {
         }
     }
     
-    private func printRelovedState(for assetTask: AVAssetDownloadTask) {
+    private func printRelovedState(for assetTask: AVAggregateAssetDownloadTask) {
 
         switch assetTask.state {
         case .canceling:print("canceling")

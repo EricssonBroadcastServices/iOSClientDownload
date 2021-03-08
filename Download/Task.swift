@@ -19,7 +19,7 @@ public struct Progress {
 public final class Task: TaskType {
     public let eventPublishTransmitter = EventPublishTransmitter<Task>()
     
-    public var task: AVAssetDownloadTask?
+    public var task: AVAggregateAssetDownloadTask?
     public var configuration: Configuration
     public var responseData: ResponseData
     public var fairplayRequester: FairplayRequester?
@@ -45,7 +45,7 @@ public final class Task: TaskType {
         self.responseData = responseData
     }
     
-    public init(restoredTask: AVAssetDownloadTask, sessionManager: SessionManager<Task>, configuration: Configuration, fairplayRequester: FairplayRequester? = nil, analyticsProvider: TaskAnalyticsProvider?, responseData: ResponseData = ResponseData()) {
+    public init(restoredTask: AVAggregateAssetDownloadTask, sessionManager: SessionManager<Task>, configuration: Configuration, fairplayRequester: FairplayRequester? = nil, analyticsProvider: TaskAnalyticsProvider?, responseData: ResponseData = ResponseData()) {
         self.task = restoredTask
         self.sessionManager = sessionManager
         self.configuration = configuration

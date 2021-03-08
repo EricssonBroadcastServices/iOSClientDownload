@@ -1,5 +1,6 @@
 # CHANGELOG
 
+* `2.2.50` Release - [2.2.50](#2250)
 * `2.2.40` Release - [2.2.40](#2240)
 * `2.2.30` Release - [2.2.30](#2210)
 * `2.2.20` Release - [2.2.20](#2220)
@@ -9,6 +10,13 @@
 * `0.80.x` Releases - [0.80.0](#0800)
 * `0.72.x` Releases - [0.72.0](#0720)
 * `0.1.x` Releases - [0.1.0](#010)
+
+
+## 2.2.500
+#### Bug Fixes
+* `EMP-1580` Migrate the SDK download task from `AVAssetDownloadTask` to `AVAggregateAssetDownloadTask`
+* `EMP-1580` Fix mutiple file downloads when specifying `audios & subtitles` by using `AVAggregateAssetDownloadTask`.
+
 
 ## 2.2.400
 #### Bug Fixes
