@@ -30,7 +30,7 @@ public class SessionDelegate<T: TaskType>: NSObject, AVAssetDownloadDelegate {
     }
     
     /// Access the task delegate for the specified task in a thread-safe manner.
-    public subscript(task: AVAssetDownloadTask) -> T? {
+    public subscript(task: AVAggregateAssetDownloadTask) -> T? {
         get {
             lock.lock() ; defer { lock.unlock() }
             return requests[task.taskIdentifier]
@@ -58,23 +58,14 @@ public class SessionDelegate<T: TaskType>: NSObject, AVAssetDownloadDelegate {
     /// This delegate callback should only be used to save the location URL somewhere in your application. Any additional work should be done in `URLSessionTaskDelegate.urlSession(_:task:didCompleteWithError:)`.
     @available(iOS 10.0, *)
     public func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didFinishDownloadingTo location: URL) {
-        if let delegate = self[assetDownloadTask]?.delegate {
-            delegate.urlSession(session, assetDownloadTask: assetDownloadTask, didFinishDownloadingTo: location)
-        }
     }
     
     @available(iOS 9.0, *)
     public func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didLoad timeRange: CMTimeRange, totalTimeRangesLoaded loadedTimeRanges: [NSValue], timeRangeExpectedToLoad: CMTimeRange) {
-        if let delegate = self[assetDownloadTask]?.delegate {
-            delegate.urlSession(session, assetDownloadTask: assetDownloadTask, didLoad: timeRange, totalTimeRangesLoaded: loadedTimeRanges, timeRangeExpectedToLoad: timeRangeExpectedToLoad)
-        }
     }
     
     @available(iOS 9.0, *)
     public func urlSession(_ session: URLSession, assetDownloadTask: AVAssetDownloadTask, didResolve resolvedMediaSelection: AVMediaSelection) {
-        if let delegate = self[assetDownloadTask]?.delegate {
-            delegate.urlSession(session, assetDownloadTask: assetDownloadTask, didResolve: resolvedMediaSelection)
-        }
     }
     
     // MARK: - URLSessionTaskDelegate
@@ -103,25 +94,42 @@ public class SessionDelegate<T: TaskType>: NSObject, AVAssetDownloadDelegate {
         
     }
     
-    @available(iOS 10.0, *)
-    public func urlSession(_ session: URLSession, task: URLSessionTask, didFinishCollecting metrics: URLSessionTaskMetrics) {
-        
+    public func urlSession(_ session: URLSession, aggregateAssetDownloadTask: AVAggregateAssetDownloadTask, didCompleteFor resolvedMediaSelection: AVMediaSelection) {
+        if let delegate = self[aggregateAssetDownloadTask]?.delegate {
+            delegate.urlSession(session, assetDownloadTask: aggregateAssetDownloadTask, didResolve: resolvedMediaSelection)
+        }
+    }
+    
+    public func urlSession(_ session: URLSession, aggregateAssetDownloadTask: AVAggregateAssetDownloadTask, didLoad timeRange: CMTimeRange, totalTimeRangesLoaded loadedTimeRanges: [NSValue], timeRangeExpectedToLoad: CMTimeRange, for: AVMediaSelection) {
+        if let delegate = self[aggregateAssetDownloadTask]?.delegate {
+            delegate.urlSession(session, assetDownloadTask: aggregateAssetDownloadTask, didLoad: timeRange, totalTimeRangesLoaded: loadedTimeRanges, timeRangeExpectedToLoad: timeRangeExpectedToLoad)
+        }
+    }
+    
+    
+    public func urlSession(_ session: URLSession, aggregateAssetDownloadTask: AVAggregateAssetDownloadTask, willDownloadTo location: URL) {
+        if let delegate = self[aggregateAssetDownloadTask]?.delegate {
+            delegate.urlSession(session, assetDownloadTask: aggregateAssetDownloadTask, didFinishDownloadingTo: location)
+        }
     }
     
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        guard let assetDownloadTask = task as? AVAssetDownloadTask else {
-            // TODO: Is it wise to simply return? By design, only `AVAssetDownloadTask`s are supposed to be used here
+        guard let aggregateAssetDownloadTask = task as? AVAggregateAssetDownloadTask else {
             return
         }
-
-        if let delegate = self[assetDownloadTask]?.delegate {
+        
+        if let delegate = self[aggregateAssetDownloadTask]?.delegate {
             delegate.urlSession(session, task: task, didCompleteWithError: error)
-            self[assetDownloadTask] = nil
+            self[aggregateAssetDownloadTask] = nil
         } else {
             sessionDidCompleteWithError?(session, error)
         }
     }
     
+    @available(iOS 10.0, *)
+    public func urlSession(_ session: URLSession, task: URLSessionTask, didFinishCollecting metrics: URLSessionTaskMetrics) {
+        
+    }
 
     
     // MARK: - URLSessionDelegate
