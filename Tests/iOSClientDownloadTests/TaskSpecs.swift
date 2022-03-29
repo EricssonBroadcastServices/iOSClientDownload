@@ -11,7 +11,7 @@ import Foundation
 import Quick
 import Nimble
 
-@testable import Download
+@testable import iOSClientDownload
 
 class TaskSpec: QuickSpec {
     override func spec() {
