@@ -1,6 +1,11 @@
-[![Carthage Compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
+[![Swift](https://img.shields.io/badge/Swift-5.x-orange?style=flat-square)](https://img.shields.io/badge/Swift-5.3_5.4_5.5-Orange?style=flat-square)
+[![Platforms](https://img.shields.io/badge/Platforms-iOS_tvOS-yellowgreen?style=flat-square)](https://img.shields.io/badge/Platforms-macOS_iOS_tvOS_watchOS_Linux_Windows-Green?style=flat-square)
+[![CocoaPods Compatible](https://img.shields.io/cocoapods/v/Alamofire.svg?style=flat-square)](https://img.shields.io/cocoapods/v/Alamofire.svg)
+[![Carthage Compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat-square)](https://github.com/Carthage/Carthage)
+[![Swift Package Manager](https://img.shields.io/badge/Swift_Package_Manager-compatible-orange?style=flat-square)](https://img.shields.io/badge/Swift_Package_Manager-compatible-orange?style=flat-square)
 
-# Player
+
+# Download
 
 * [Features](#features)
 * [License](https://github.com/EricssonBroadcastServices/iOSClientDownload/blob/master/LICENSE)
@@ -40,6 +45,24 @@
 
 ## Installation
 
+### Swift Package Manager
+
+The Swift Package Manager is a tool for automating the distribution of Swift code and is integrated into the swift compiler.
+Once you have your Swift package set up, adding `iOSClientDownload` as a dependency is as easy as adding it to the dependencies value of your Package.swift.
+
+```sh
+dependencies: [
+    .package(url: "https://github.com/EricssonBroadcastServices/iOSClientDownload", from: "3.0.0")
+]
+```
+
+### CocoaPods
+CocoaPods is a dependency manager for Cocoa projects. For usage and installation instructions, visit their website. To integrate `iOSClientDownload` into your Xcode project using CocoaPods, specify it in your Podfile:
+
+```sh
+pod 'iOSClientDownload', '~>  3.0.0'
+```
+
 ### Carthage
 [Carthage](https://github.com/Carthage/Carthage) is a decentralized dependency manager that builds your dependency graph without interfering with your `Xcode` project setup. `CI` integration through [fastlane](https://github.com/fastlane/fastlane) is also available.
 
@@ -56,7 +79,7 @@ Once *Carthage* has been installed, you need to create a `Cartfile` which specif
 github "EricssonBroadcastServices/iOSClientDownload"
 ```
 
-Running `carthage update` will fetch your dependencies and place them in `/Carthage/Checkouts`. You either build the `.framework`s and drag them in your `Xcode` or attach the fetched projects to your `Xcode workspace`.
+Running `carthage update --use-xcframeworks` will fetch your dependencies and place them in `/Carthage/Checkouts`. You either build the `.framework`s and drag them in your `Xcode` or attach the fetched projects to your `Xcode workspace`.
 
 Finaly, make sure you add the `.framework`s to your targets *General -> Embedded Binaries* section.
 
@@ -182,3 +205,4 @@ No formalised roadmap has yet been established but an extensive backlog of possi
 - [x] Unit testing
 
 ## Contributing
+
