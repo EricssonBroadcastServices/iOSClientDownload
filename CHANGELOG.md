@@ -1,5 +1,6 @@
 # CHANGELOG
 
+* `3.0.10` Release - [3.0.100](#30100)
 * `3.0.00` Release - [3.0.000](#30000)
 * `2.2.50` Release - [2.2.500](#22500)
 * `2.2.40` Release - [2.2.400](#22400)
@@ -11,6 +12,10 @@
 * `0.80.x` Releases - [0.80.0](#08000)
 * `0.72.x` Releases - [0.72.0](#07200)
 * `0.1.x` Releases - [0.1.0](#010)
+
+## 3.0.100
+#### Bug Fixes
+* `EMP-18212` Bug fix : Forcing downloads to start instantly. 
 
 ## 3.0.000
 #### Features

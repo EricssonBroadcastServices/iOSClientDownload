@@ -55,7 +55,9 @@ public class SessionManager<T: TaskType> {
         delegate: SessionDelegate<T> = SessionDelegate())
     {
         
-        configuration.isDiscretionary = true
+        // Make it false for forcing the downloads to start asap
+        configuration.isDiscretionary = false
+        
         configuration.sessionSendsLaunchEvents = true
         
         self.delegate = delegate
