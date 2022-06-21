@@ -1,5 +1,6 @@
 # CHANGELOG
 
+* `3.0.20` Release - [3.0.200](#30200)
 * `3.0.10` Release - [3.0.100](#30100)
 * `3.0.00` Release - [3.0.000](#30000)
 * `2.2.50` Release - [2.2.500](#22500)
@@ -13,9 +14,9 @@
 * `0.72.x` Releases - [0.72.0](#07200)
 * `0.1.x` Releases - [0.1.0](#010)
 
-## 3.0.100
+## 3.0.200
 #### Bug Fixes
-* `EMP-18212` Bug fix : Forcing downloads to start instantly. 
+* `EMP-18319` Bug fix : Player freeze when seek on offline assets
 
 ## 3.0.000
 #### Features
