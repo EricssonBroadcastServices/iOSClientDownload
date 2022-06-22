@@ -52,7 +52,7 @@ Once you have your Swift package set up, adding `iOSClientDownload` as a depende
 
 ```sh
 dependencies: [
-    .package(url: "https://github.com/EricssonBroadcastServices/iOSClientDownload", from: "3.0.1")
+    .package(url: "https://github.com/EricssonBroadcastServices/iOSClientDownload", from: "3.0.2")
 ]
 ```
 
@@ -60,7 +60,7 @@ dependencies: [
 CocoaPods is a dependency manager for Cocoa projects. For usage and installation instructions, visit their website. To integrate `iOSClientDownload` into your Xcode project using CocoaPods, specify it in your Podfile:
 
 ```sh
-pod 'iOSClientDownload', '~>  3.0.1'
+pod 'iOSClientDownload', '~>  3.0.2'
 ```
 
 ### Carthage

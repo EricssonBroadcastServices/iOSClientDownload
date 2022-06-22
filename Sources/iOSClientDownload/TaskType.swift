@@ -49,9 +49,14 @@ extension TaskType {
   
         var preferredMedia = [AVMediaSelection]()
         
+        let asset = AVURLAsset(url: url)
+        asset.resourceLoader.preloadsEligibleContentKeys = true
+        
         if configuration.allAudiosSubs == true {
-            preferredMedia = AVURLAsset(url: url).allMediaSelections
+            preferredMedia = asset.allMediaSelections
         } else {
+            
+            preferredMedia = asset.allMediaSelections
             
             // preferredMedia = [AVURLAsset(url: url).preferredMediaSelection]
             /* preferredMediaSelection.removeAll()
@@ -102,7 +107,7 @@ extension TaskType {
     
         
         // Use aggregateAssetDownloadTask
-        guard let task = sessionManager.session.aggregateAssetDownloadTask(with: AVURLAsset(url: url), mediaSelections: preferredMedia, assetTitle: configuration.identifier, assetArtworkData: configuration.artwork, options: options) else {
+        guard let task = sessionManager.session.aggregateAssetDownloadTask(with: asset, mediaSelections: preferredMedia, assetTitle: configuration.identifier, assetArtworkData: configuration.artwork, options: options) else {
             callback(nil, TaskError.downloadSessionInvalidated)
             return
         }
