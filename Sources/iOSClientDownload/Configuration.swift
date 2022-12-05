@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 public class Configuration {
     public let identifier: String
@@ -14,6 +15,8 @@ public class Configuration {
     public let artwork: Data?
     
     public var requiredBitrate: Int64?
+    public var presentationSize: CGSize?
+    
     public var subtitles: [String]?
     public var audios: [String]?
     public var allAudiosSubs: Bool = false

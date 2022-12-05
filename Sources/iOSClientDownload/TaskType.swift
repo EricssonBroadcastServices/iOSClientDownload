@@ -25,7 +25,7 @@ public protocol TaskType: class, EventPublisher {
     func suspend()
     func cancel()
     
-    func use(bitrate: Int64?) -> Self
+    func use(bitrate: Int64?, presentationSize: CGSize? ) -> Self
     var state: DownloadState { get }
 }
 
@@ -34,8 +34,9 @@ extension TaskType {
     ///
     /// - parameter bitrate: The bitrate to select, in bps (bits per second)
     @discardableResult
-    public func use(bitrate: Int64?) -> Self {
+    public func use(bitrate: Int64?, presentationSize: CGSize? ) -> Self {
         configuration.requiredBitrate = bitrate
+        configuration.presentationSize = presentationSize
         return self
     }
 }
@@ -49,11 +50,15 @@ extension TaskType {
   
         var preferredMedia = [AVMediaSelection]()
         
+        
+        
         let asset = AVURLAsset(url: url)
         asset.resourceLoader.preloadsEligibleContentKeys = true
         
         if configuration.allAudiosSubs == true {
+            
             preferredMedia = asset.allMediaSelections
+        
         } else {
             
             preferredMedia = asset.allMediaSelections
