@@ -30,10 +30,13 @@ public protocol TaskType: class, EventPublisher {
 }
 
 extension TaskType {
-    /// The lowest media bitrate greater than or equal to this value will be selected. If no suitable media bitrate is found, the highest media bitrate will be selected. If this option is not specified, the highest media bitrate will be selected for download by default.
-    ///
-    /// - parameter bitrate: The bitrate to select, in bps (bits per second)
+    
     @discardableResult
+    /// The lowest media bitrate greater than or equal to this value will be selected. If no suitable media bitrate is found, the highest media bitrate will be selected. If this option is not specified, the highest media bitrate will be selected for download by default.
+    /// - Parameters:
+    ///   - bitrate: The bitrate to select, in bps (bits per second)
+    ///   - presentationSize: presentationSize : resolution of the stream
+    /// - Returns: self
     public func use(bitrate: Int64?, presentationSize: CGSize? ) -> Self {
         configuration.requiredBitrate = bitrate
         configuration.presentationSize = presentationSize
