@@ -52,7 +52,7 @@ Once you have your Swift package set up, adding `iOSClientDownload` as a depende
 
 ```sh
 dependencies: [
-    .package(url: "https://github.com/EricssonBroadcastServices/iOSClientDownload", from: "3.0.2")
+    .package(url: "https://github.com/EricssonBroadcastServices/iOSClientDownload", from: "3.0.3")
 ]
 ```
 
@@ -60,7 +60,7 @@ dependencies: [
 CocoaPods is a dependency manager for Cocoa projects. For usage and installation instructions, visit their website. To integrate `iOSClientDownload` into your Xcode project using CocoaPods, specify it in your Podfile:
 
 ```sh
-pod 'iOSClientDownload', '~>  3.0.2'
+pod 'iOSClientDownload', '~>  3.0.3'
 ```
 
 ### Carthage
@@ -108,6 +108,14 @@ Bitrate selection allows the lowest media bitrate greater than or equal to a spe
 ```swift
 task.use(bitrate: 16000)
 ```
+
+### Selecting Preferred PresentationSize
+By default, a download task selects the variant with the largest media presentation size. To download a variant of a particular size, client apps cans provide a CGSize value.
+
+```swift
+task.use(bitrate: 16000, presentationSize: CGSize(width: 1920, height: 1080))
+```
+
 
 ### FairPlay protection
 In order to use `DRM` protected offline assets through `FairPlay`, *client applications* need to implement a `FairplayRequester` to handle the *certificate* and *license* proceedure.  This functionality will be solution specific.  This protocol extends the *Apple* supplied `AVAssetResourceLoaderDelegate` protocol. **EMP** provides an out of the box implementation for *offline* `FairPlay` protection through the [Exposure module](https://github.com/EricssonBroadcastServices/iOSClientExposure) which integrates seamlessly with the rest of the platform.

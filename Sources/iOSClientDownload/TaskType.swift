@@ -25,17 +25,21 @@ public protocol TaskType: class, EventPublisher {
     func suspend()
     func cancel()
     
-    func use(bitrate: Int64?) -> Self
+    func use(bitrate: Int64?, presentationSize: CGSize? ) -> Self
     var state: DownloadState { get }
 }
 
 extension TaskType {
-    /// The lowest media bitrate greater than or equal to this value will be selected. If no suitable media bitrate is found, the highest media bitrate will be selected. If this option is not specified, the highest media bitrate will be selected for download by default.
-    ///
-    /// - parameter bitrate: The bitrate to select, in bps (bits per second)
+    
     @discardableResult
-    public func use(bitrate: Int64?) -> Self {
+    /// The lowest media bitrate greater than or equal to this value will be selected. If no suitable media bitrate is found, the highest media bitrate will be selected. If this option is not specified, the highest media bitrate will be selected for download by default.
+    /// - Parameters:
+    ///   - bitrate: The bitrate to select, in bps (bits per second)
+    ///   - presentationSize: presentationSize : resolution of the stream
+    /// - Returns: self
+    public func use(bitrate: Int64?, presentationSize: CGSize? ) -> Self {
         configuration.requiredBitrate = bitrate
+        configuration.presentationSize = presentationSize
         return self
     }
 }
@@ -49,11 +53,15 @@ extension TaskType {
   
         var preferredMedia = [AVMediaSelection]()
         
+        
+        
         let asset = AVURLAsset(url: url)
         asset.resourceLoader.preloadsEligibleContentKeys = true
         
         if configuration.allAudiosSubs == true {
+            
             preferredMedia = asset.allMediaSelections
+        
         } else {
             
             preferredMedia = asset.allMediaSelections

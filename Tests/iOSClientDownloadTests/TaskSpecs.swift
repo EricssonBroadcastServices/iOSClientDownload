@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 import Quick
 import Nimble
@@ -37,7 +38,7 @@ class TaskSpec: QuickSpec {
                 
                 it("Should record bitrate selection") {
                     let task = sessionManager.download(mediaLocator: url, assetId: assetId, analyticsProvider: provider)
-                    task.use(bitrate: 10)
+                    task.use(bitrate: 10, presentationSize: CGSize(width: 1080, height: 720))
                     expect(task.configuration.requiredBitrate).to(equal(10))
                 }
                 

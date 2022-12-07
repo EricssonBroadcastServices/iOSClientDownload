@@ -1,5 +1,6 @@
 # CHANGELOG
 
+* `3.0.30` Release - [3.0.300](#30300)
 * `3.0.20` Release - [3.0.200](#30200)
 * `3.0.10` Release - [3.0.100](#30100)
 * `3.0.00` Release - [3.0.000](#30000)
@@ -13,6 +14,10 @@
 * `0.80.x` Releases - [0.80.0](#08000)
 * `0.72.x` Releases - [0.72.0](#07200)
 * `0.1.x` Releases - [0.1.0](#010)
+
+## 3.0.300
+#### Bug Fixes
+* `EMP-19059` Add `presentationSize` to be passed from client apps when selecting download streams
 
 ## 3.0.200
 #### Bug Fixes
