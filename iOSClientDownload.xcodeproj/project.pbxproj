@@ -32,6 +32,7 @@
 		7857BB7F27F33AB3002DDAD8 /* update_dependency_graph.rb in Resources */ = {isa = PBXBuildFile; fileRef = 7857BB7B27F33AB3002DDAD8 /* update_dependency_graph.rb */; };
 		7857BB8127F33ABB002DDAD8 /* CHANGELOG.md in Resources */ = {isa = PBXBuildFile; fileRef = 7857BB8027F33ABB002DDAD8 /* CHANGELOG.md */; };
 		7857BB8327F33AC1002DDAD8 /* UPGRADE_GUIDE.md in Resources */ = {isa = PBXBuildFile; fileRef = 7857BB8227F33AC1002DDAD8 /* UPGRADE_GUIDE.md */; };
+		DC0D6C6F2BD15CAE00D8E3F7 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = DC0D6C6E2BD15CAE00D8E3F7 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -62,6 +63,7 @@
 		7857BB8027F33ABB002DDAD8 /* CHANGELOG.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = CHANGELOG.md; sourceTree = "<group>"; };
 		7857BB8227F33AC1002DDAD8 /* UPGRADE_GUIDE.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = UPGRADE_GUIDE.md; sourceTree = "<group>"; };
 		7857BB8427F33AEA002DDAD8 /* iOSClientDownload.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = iOSClientDownload.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		DC0D6C6E2BD15CAE00D8E3F7 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -92,6 +94,7 @@
 			isa = PBXGroup;
 			children = (
 				7857BB4C27F33A9B002DDAD8 /* TaskDelegate.swift */,
+				DC0D6C6E2BD15CAE00D8E3F7 /* PrivacyInfo.xcprivacy */,
 				7857BB4D27F33A9B002DDAD8 /* MediaOption.swift */,
 				7857BB4E27F33A9B002DDAD8 /* AVAssetTrack+Extensions.swift */,
 				7857BB4F27F33A9B002DDAD8 /* TaskError.swift */,
@@ -220,6 +223,7 @@
 				7857BB7D27F33AB3002DDAD8 /* Fastfile in Resources */,
 				7857BB8327F33AC1002DDAD8 /* UPGRADE_GUIDE.md in Resources */,
 				7857BB7F27F33AB3002DDAD8 /* update_dependency_graph.rb in Resources */,
+				DC0D6C6F2BD15CAE00D8E3F7 /* PrivacyInfo.xcprivacy in Resources */,
 				7857BB8127F33ABB002DDAD8 /* CHANGELOG.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
