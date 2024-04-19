@@ -9,4 +9,5 @@ spec.documentation_url = "https://github.com/EricssonBroadcastServices/iOSClient
 spec.platforms = { :ios => "11.0" }
 spec.source       = { :git => "https://github.com/EricssonBroadcastServices/iOSClientDownload.git", :tag => "v#{spec.version}" }
 spec.source_files  = "Sources/iOSClientDownload/**/*.swift"
+spec.resource_bundles = { "iOSClientDownload.git" => ["Sources/iOSClientDownload/PrivacyInfo.xcprivacy"] }
 end
