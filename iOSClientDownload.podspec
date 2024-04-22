@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
 spec.name         = "iOSClientDownload"
-spec.version      = "3.0.300"
+spec.version      = "3.1.0"
 spec.summary      = "RedBeeMedia iOS SDK Download Module"
 spec.homepage     = "https://github.com/EricssonBroadcastServices"
 spec.license      = { :type => "Apache", :file => "https://github.com/EricssonBroadcastServices/iOSClientDownload/blob/master/LICENSE" }

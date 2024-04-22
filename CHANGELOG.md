@@ -1,5 +1,6 @@
 # CHANGELOG
 
+* `3.1.0` Release - [3.1.0](#310)
 * `3.0.30` Release - [3.0.300](#30300)
 * `3.0.20` Release - [3.0.200](#30200)
 * `3.0.10` Release - [3.0.100](#30100)
@@ -14,6 +15,10 @@
 * `0.80.x` Releases - [0.80.0](#08000)
 * `0.72.x` Releases - [0.72.0](#07200)
 * `0.1.x` Releases - [0.1.0](#010)
+
+## 3.1.0
+#### Features
+* `EMP-21398` feat: Privacy Manifests for SDKs
 
 ## 3.0.300
 #### Bug Fixes
